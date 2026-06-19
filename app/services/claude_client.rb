@@ -11,7 +11,7 @@ require "uri"
 # keep the same `call` / `chat` interface so callers do not change.
 class ClaudeClient
   ENDPOINT = URI("https://api.anthropic.com/v1/messages")
-  MODEL = "claude-sonnet-4-20250514"
+  MODEL = "claude-sonnet-4-6"
 
   class Error < StandardError; end
 
@@ -20,12 +20,12 @@ class ClaudeClient
   end
 
   # Single-turn call: one user message, optional system prompt baked into it.
-  def call(prompt, max_tokens: 1000)
+  def call(prompt, max_tokens: 4096)
     chat([ { role: "user", content: prompt } ], max_tokens: max_tokens)
   end
 
   # Multi-turn call: pass the full message history plus an optional system prompt.
-  def chat(messages, system: nil, max_tokens: 1000)
+  def chat(messages, system: nil, max_tokens: 4096)
     raise Error, "ANTHROPIC_API_KEY is not set" if @api_key.blank?
 
     body = { model: MODEL, max_tokens: max_tokens, messages: messages }
