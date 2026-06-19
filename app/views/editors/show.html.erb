@@ -1,0 +1,104 @@
+<% details = @editor.details %>
+
+<header id="header">
+  <div class="header-inner">
+    <div class="logo">
+      <span class="logo-main">Proofs</span>
+      <span class="logo-sub">/ write fast, edit slowly</span>
+    </div>
+    <%= link_to "← Back", root_path, class: "btn-ghost" %>
+  </div>
+</header>
+
+<main class="phase-primer">
+  <div class="mono-label">Editor primer</div>
+
+  <h1><%= @editor.name %></h1>
+  <div class="primer-booktitle"><%= details[:book_title] %></div>
+  <div class="primer-byline"><%= details[:full_name] %> · <%= details[:book_year] %></div>
+
+  <div class="primer-lead"><%= details[:lead] %></div>
+
+  <div class="school-section">
+    <div class="mono-label">The Book</div>
+    <div class="primer-prose"><%= details[:book] %></div>
+  </div>
+
+  <div class="school-section">
+    <div class="mono-label">Philosophy</div>
+    <div class="primer-prose"><%= details[:philosophy] %></div>
+  </div>
+
+  <div class="school-section primer-grid-2-3">
+    <div>
+      <div class="mono-label">Works on</div>
+      <div class="primer-scale"><%= details[:scale] %></div>
+    </div>
+    <div>
+      <div class="mono-label">Targets</div>
+      <ul class="primer-list">
+        <% details[:targets].each do |t| %>
+          <li><%= t %></li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+
+  <div class="school-section primer-grid-2">
+    <div>
+      <div class="mono-label">Best used</div>
+      <div class="primer-prose-sm"><%= details[:best_used] %></div>
+    </div>
+    <div>
+      <div class="mono-label">Not for</div>
+      <div class="primer-prose-sm muted"><%= details[:not_for] %></div>
+    </div>
+  </div>
+
+  <div class="school-section">
+    <div class="mono-label">Inside the prompt</div>
+    <div class="primer-italic-note">
+      What follows is the actual content sent to the editor model. The principles drive what gets flagged. The critical guard prevents principle-driven damage to deliberate stylistic choices.
+    </div>
+
+    <div class="principles-box">
+      <div class="mono-label-sm">Principles</div>
+      <ol class="primer-list">
+        <% details[:principles].each do |p| %>
+          <li><%= p %></li>
+        <% end %>
+      </ol>
+    </div>
+
+    <div class="guardrail-box">
+      <div class="mono-label-sm guardrail-label">Critical guard</div>
+      <div class="guardrail-text"><%= details[:guardrail] %></div>
+    </div>
+  </div>
+
+  <div class="school-section">
+    <div class="prompt-edit-header">
+      <div class="mono-label">Edit system prompt</div>
+      <span class="customised-badge" id="customised-badge" <%= "hidden" unless PromptStore.custom?(@editor.key) %>>· customised</span>
+    </div>
+    <div class="primer-italic-note">
+      The full prompt sent to the model, including the output format specification. Edit to iterate on this editor's behaviour. Changes persist for this server session. If the model stops returning parseable output, reset to default.
+    </div>
+    <textarea id="prompt-draft" spellcheck="false"><%= @editor.prompt %></textarea>
+    <div class="prompt-edit-actions">
+      <button class="btn-primary" id="save-prompt-btn" disabled>Save changes</button>
+      <button class="btn-ghost" id="reset-prompt-btn" <%= "disabled" unless PromptStore.custom?(@editor.key) %>>Reset to default</button>
+      <span class="char-count" id="char-count"><%= @editor.prompt.length %> chars</span>
+    </div>
+  </div>
+
+  <div class="school-section primer-cta">
+    <%= link_to "Use #{@editor.name} (load essay first)", root_path(editor: @editor.key), class: "btn-primary" %>
+    <%= link_to "Back to editors", root_path, class: "btn-ghost" %>
+  </div>
+</main>
+
+<script>
+  window.EDITWISE_EDITOR_KEY = <%= @editor.key.to_json %>;
+  window.EDITWISE_DEFAULT_PROMPT = <%= @editor.default_prompt.to_json %>;
+</script>
