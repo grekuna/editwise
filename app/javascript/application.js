@@ -641,6 +641,19 @@ function initEssayApp() {
         const block = document.createElement("div");
         block.className = "discuss-message";
         block.innerHTML = `<div class="discuss-role ${msg.role === "user" ? "role-user" : "role-editor"}">${msg.role === "user" ? "You" : editorName}</div><div class="discuss-content">${escapeHtml(msg.content)}</div>`;
+        if (msg.role === "assistant") {
+          const useBtn = document.createElement("button");
+          useBtn.className = "btn-ghost discuss-use-btn";
+          useBtn.textContent = "Use as suggestion →";
+          useBtn.addEventListener("click", () => {
+            state.editValue = extractSuggestionText(msg.content);
+            state.editingId = revision.id;
+            state.discussingId = null;
+            state.discussInput = "";
+            render();
+          });
+          block.appendChild(useBtn);
+        }
         history.appendChild(block);
       });
       if (state.isDiscussing) {
@@ -716,6 +729,17 @@ function initEssayApp() {
     footer.appendChild(bar);
     document.getElementById("prev-rev-btn").addEventListener("click", prevRevision);
     document.getElementById("next-rev-btn").addEventListener("click", nextRevision);
+  }
+
+  function extractSuggestionText(text) {
+    const matches = [];
+    const curlyRe = /“([\s\S]*?)”/g;
+    const straightRe = /"([\s\S]*?)"/g;
+    let m;
+    while ((m = curlyRe.exec(text)) !== null) matches.push(m[1]);
+    while ((m = straightRe.exec(text)) !== null) matches.push(m[1]);
+    if (matches.length === 0) return text;
+    return matches.reduce((a, b) => (b.length > a.length ? b : a));
   }
 
   function button(className, label, onClick) {

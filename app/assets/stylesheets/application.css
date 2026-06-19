@@ -404,6 +404,8 @@ textarea, select, input, button { font-family: inherit; }
 .role-user { color: #5A5044; }
 .role-editor { color: var(--accent); }
 .discuss-content { font-size: 16px; line-height: 1.62; white-space: pre-wrap; }
+.discuss-use-btn { margin-top: 10px; padding: 5px 10px; font-size: 9px; opacity: 0.7; }
+.discuss-use-btn:hover { opacity: 1; }
 .typing { color: var(--mono-grey-light); font-size: 20px; letter-spacing: 0.2em; }
 .discuss-chips { margin-bottom: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
 .discuss-input-row { display: flex; gap: 8px; align-items: flex-end; }
