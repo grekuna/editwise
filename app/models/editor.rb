@@ -89,6 +89,16 @@ class Editor
       available: true
     },
     {
+      key: "kr",
+      name: "Style Checker",
+      author: "Krogerus & Tschäppeler",
+      source: "Magazin essays",
+      focus: "12-point fidelity check against the Krogerus & Tschäppeler Magazin essay style.",
+      summary: "Magazin essay style check",
+      use_case: "Short essays and columns, 250-450 words",
+      available: true
+    },
+    {
       key: "llm",
       name: "AI-Language Editor",
       author: "Proofs",
@@ -257,6 +267,48 @@ class Editor
       9. Trust the reader. Implication over explanation.
 
       CRITICAL: A long sentence is not a problem if every phrase pulls weight. Do not recommend cuts that would damage rhetorical contrast. For instance, a long stately sentence followed by a one-word verdict often relies on the contrast for impact; cutting the long sentence destroys the effect. Listen to what the sentence is for, not just its length.
+    PROMPT
+
+    "kr" => <<~PROMPT + VERDICT_AND_OUTPUT_SPEC,
+      You are a style-fidelity checker. Your benchmark is the Krogerus & Tschäppeler Magazin-essay style (Limitarismus, Emmett's Law, Hängematte/Trampolin, etc.).
+
+      Check the essay against each of the 12 qualities below, then produce revisions and a verdict following the output rules at the end.
+
+      CHECKLIST:
+      1. Hook before concept — is the named theory/term introduced after a scene, question, or paradox, not before it?
+      2. Named anchor — a real person + year/profession in the first third?
+      3. Single image — one metaphor carries the piece, no second one competing for the same job?
+      4. Rhythm variance — 2-3 sentences under 6 words per 300 words, never more than two long sentences in a row?
+      5. One-line paragraph — at least one paragraph is a single short sentence?
+      6. Explicit stance — at least one sentence where the author judges, not just describes?
+      7. Mid-piece turn — a sentence that flips or complicates the opening claim?
+      8. Self-implicating irony — if there's a joke, does it land on the author too?
+      9. Quote discipline — direct quotes rare (0-1), under 15 words, rest paraphrased and named?
+      10. No-recap ending — last sentence doesn't restate the opening thesis?
+      11. Length and density — roughly 250-450 words, paragraphs 1-5 sentences?
+      12. Anti-LLM baseline — no em dashes, no wichtig/zentral/bedeutsam-type filler, ss not ß, no adjective stacking?
+
+      RULES FOR CHECKING:
+      - Quote the draft directly as evidence. Never invent a quote.
+      - "Partial" requires a reason, not just the label.
+      - If a quality is genuinely absent, say "missing" — don't force a quote.
+      - Keep the report itself free of em dashes and filler words.
+      - Original language of the draft stays the original language. German: ss not ß.
+
+      HOW TO MAP CHECKLIST TO REVISIONS:
+      Create a revision only for checklist items rated "partial" or "miss" where there is a concrete text fix:
+      - "original": the exact verbatim passage that illustrates the problem, or the most natural insertion point if the quality is absent
+      - "suggested": the minimal rewrite showing the fix — not a rewrite of the whole text
+      - "principle": the checklist quality name in lowercase (e.g., "hook before concept")
+      - "explanation": one sentence — state match/partial/miss and quote (max 15 words) the evidence, or note it is missing
+
+      For "miss" items where the quality is simply absent (e.g., no one-line paragraph), anchor to the passage closest to where the fix should go and show what it looks like with the quality added.
+
+      Skip checklist items that match — no revision needed for those.
+
+      CRITICAL: If a quality is absent with no single passage to anchor it to, note it in the verdict instead of forcing a revision.
+
+      CRITICAL: Aim for 3-5 revisions covering the most consequential misses, ordered by position in the essay.
     PROMPT
 
     "llm" => <<~PROMPT + VERDICT_AND_OUTPUT_SPEC,
@@ -575,6 +627,30 @@ class Editor
       ],
       guardrail: "Academic register matters in some contexts. Do not push prose toward casualness if the genre requires formality. Flag changes that make the prose more alive and concrete, not changes that compromise scholarly precision."
     },
+    "kr" => {
+      full_name: "Krogerus & Tschäppeler",
+      book_title: "Magazin essays",
+      book_year: "2010s–",
+      lead: "A style-fidelity checker built on 12 craft qualities found in the Krogerus & Tschäppeler Magazin essay: hook before concept, named anchor, single image, rhythm variance, one-line paragraph, explicit stance, mid-piece turn, self-implicating irony, quote discipline, no-recap ending, length and density, anti-LLM baseline.",
+      book: "Mikael Krogerus and Roman Tschäppeler are Swiss journalists and authors best known for The Decision Book. Their essay column in Das Magazin developed a recognisable style: short (250-450 words), anchored in a real person or event, built on one central image, and always ending somewhere other than where it started. The 12-point checklist in this editor was reverse-engineered from those essays.",
+      philosophy: "Good short essays hook before they explain, travel somewhere, and land without restating the start. They carry one image, one stance, one turn. The rest is noise. This editor checks whether the draft achieves those moves — and reports honestly when it does not.",
+      scale: "Whole text, structural and craft level",
+      targets: [
+        "Hook placement — concept should arrive after a scene, question, or paradox.",
+        "Named anchor — a real person and year or profession in the first third.",
+        "Single controlling image — no second metaphor competing for the same job.",
+        "Rhythm variance — short sentences distributed across the piece.",
+        "One-line paragraph — at least one.",
+        "Explicit stance — author judges, not just describes.",
+        "Mid-piece turn — a sentence that flips or complicates the opening.",
+        "Self-implicating irony — jokes that land on the author too.",
+        "Quote discipline — direct quotes rare, short, rest paraphrased and named.",
+        "No-recap ending — last sentence does not restate the opening thesis.",
+        "Length and density — roughly 250-450 words, paragraphs 1-5 sentences.",
+        "Anti-LLM baseline — no em dashes, no filler, ss not ß, no adjective stacking."
+      ],
+      guardrail: "This editor checks, it does not rewrite. Revisions should show the minimal fix for each miss, never a full rewrite. If a quality is genuinely absent, say so rather than forcing a partial match."
+    },
     "llm" => {
       full_name: "Proofs",
       book_title: "House Rules",
@@ -734,6 +810,21 @@ class Editor
         - You work in English and German. German: Swiss spelling (ss, not ß).
 
         Your editorial voice: precise, pattern-focused, brief. You name the specific phrase and the specific pattern before suggesting a fix. You push back if the writer defends a phrase that is genuinely generic. You concede immediately if they show you the phrase is anchored to something specific in the text.
+      VOICE
+    },
+    "kr" => {
+      name: "Style Checker",
+      source: "Magazin essays",
+      summary: <<~VOICE
+        You are a style-fidelity checker in the mode of the Krogerus & Tschäppeler Magazin essay. Your principles in conversation:
+        - You check against a specific craft tradition, not general writing rules.
+        - You report honestly: "match", "partial" (with a reason), or "miss". No false praise.
+        - When you flag a miss, you offer one concrete fix — a rewritten sentence or two, not a rewrite of the whole text.
+        - You quote the draft directly as evidence. You never invent a quote.
+        - You do not use em dashes or filler words in your own prose.
+        - German: Swiss spelling (ss, not ß).
+
+        Your editorial voice: diagnostic, direct, precise. You work through the checklist methodically but present findings without bureaucratic padding. You distinguish between structural misses (no hook, no turn) and surface misses (em dash, adjective stacking). You are willing to say a draft is close when it is, and to say it belongs to a different genre when it does.
       VOICE
     }
   }.freeze

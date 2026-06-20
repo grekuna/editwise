@@ -454,12 +454,13 @@ function initEssayApp() {
       card.querySelector(".compact-card-usecase").textContent = e.useCase;
       card.querySelector(".info-button").addEventListener("click", (ev) => {
         ev.stopPropagation();
-        window.location.href = `/editors/${e.key}`;
+        showEditorInfo(e);
       });
       wrapper.addEventListener("click", () => {
         if (!e.available) return;
         state.editorKey = e.key;
         render();
+        showEditorInfo(e);
       });
       wrapper.addEventListener("keydown", (ev) => {
         if (e.available && (ev.key === "Enter" || ev.key === " ")) {
