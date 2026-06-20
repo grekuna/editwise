@@ -6,6 +6,8 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
+[hidden] { display: none !important; }
+
 :root {
   --ink: #1F1B16;
   --ink-soft: #3A332B;
@@ -417,6 +419,20 @@ textarea, select, input, button { font-family: inherit; }
 .discuss-input-row textarea:focus { border-color: var(--mono-grey); }
 .discuss-input-row button { align-self: stretch; }
 .discuss-hint { margin-top: 8px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 9px; letter-spacing: 0.14em; color: #A89B82; }
+
+/* ---- Essay text editor ---- */
+.essay-edit-textarea { width: 100%; min-height: 480px; font-family: inherit; font-size: 17px; line-height: 1.7; padding: 0; border: none; outline: none; resize: vertical; background: transparent; color: var(--ink); }
+.essay-edit-bar { display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+/* ---- Editor info modal ---- */
+#editor-info-modal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; }
+#editor-info-modal[hidden] { display: none; }
+#editor-info-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.35); }
+#editor-info-card { position: relative; background: var(--paper); border: 1px solid var(--border-strong); padding: 32px; max-width: 480px; width: 90%; z-index: 1; }
+#editor-info-name { font-size: 20px; font-weight: 600; margin-bottom: 6px; }
+#editor-info-byline { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; color: var(--mono-grey); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 18px; }
+#editor-info-lead { font-size: 16px; line-height: 1.65; margin-bottom: 24px; }
+#editor-info-actions { display: flex; gap: 10px; }
 
 /* ---- Footer nav ---- */
 

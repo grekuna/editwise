@@ -4,7 +4,8 @@
 
 <div id="app" data-editors="<%= @editors.map { |e|
       { key: e.key, name: e.name, author: e.author, source: e.source,
-        focus: e.focus, useCase: e.use_case, available: e.available }
+        focus: e.focus, useCase: e.use_case, available: e.available,
+        lead: e.details[:lead] }
     }.to_json %>">
   <header id="header">
     <div class="header-inner">
@@ -110,3 +111,16 @@
     <div class="rev-discussion" hidden></div>
   </span>
 </template>
+
+<div id="editor-info-modal" hidden>
+  <div id="editor-info-backdrop"></div>
+  <div id="editor-info-card">
+    <div id="editor-info-name"></div>
+    <div id="editor-info-byline"></div>
+    <div id="editor-info-lead"></div>
+    <div id="editor-info-actions">
+      <a id="editor-info-readmore" class="btn-ghost">Read more →</a>
+      <button id="editor-info-close" class="btn-ghost">Close</button>
+    </div>
+  </div>
+</div>
