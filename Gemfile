@@ -19,4 +19,6 @@ group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
   # Loads ANTHROPIC_API_KEY and friends from .env in development
   gem "dotenv-rails"
+  # Stubbing and mocking for minitest
+  gem "mocha"
 end
