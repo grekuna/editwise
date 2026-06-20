@@ -60,6 +60,8 @@ function initEssayApp() {
     conversations: {}, // revId -> [{role, content}]
     discussInput: "",
     isDiscussing: false,
+    isEditingEssay: false,
+    essayEditValue: "",
   };
 
   const segmentRefs = {};
@@ -281,6 +283,35 @@ function initEssayApp() {
     }
   }
 
+  function startEssayEdit() {
+    state.isEditingEssay = true;
+    state.essayEditValue = state.essay;
+    state.editingId = null;
+    state.discussingId = null;
+    render();
+  }
+
+  function saveEssayEdit() {
+    state.essay = state.essayEditValue;
+    state.revisions.forEach((rev) => {
+      if (rev.status === "pending" && !state.essay.includes(rev.original)) {
+        rev.status = "declined";
+      }
+      if (rev.status === "accepted" && !state.essay.includes(rev.appliedText || rev.suggested)) {
+        rev.status = "pending";
+        rev.appliedText = null;
+      }
+    });
+    state.activeId = pendingRevisions()[0]?.id || null;
+    state.isEditingEssay = false;
+    render();
+  }
+
+  function cancelEssayEdit() {
+    state.isEditingEssay = false;
+    render();
+  }
+
   function openDiscussion(id) {
     state.discussingId = id;
     state.editingId = null;
@@ -393,7 +424,7 @@ function initEssayApp() {
       card.querySelector(".editor-card-author").innerHTML = `${e.author}, <em>${e.source}</em>`;
       card.querySelector(".editor-card-focus").textContent = e.focus;
       btn.addEventListener("click", () => {
-        if (e.available) window.location.href = `/editors/${e.key}`;
+        if (e.available) showEditorInfo(e);
       });
       cardsContainer.appendChild(card);
     });
@@ -464,6 +495,12 @@ function initEssayApp() {
       copyBtn.textContent = state.copyToast ? "Copied" : "Copy essay";
       copyBtn.addEventListener("click", copyEssay);
     }
+    const editTextBtn = document.createElement("button");
+    editTextBtn.className = "btn-ghost";
+    editTextBtn.textContent = state.isEditingEssay ? "Editing…" : "Edit text";
+    editTextBtn.disabled = state.isRunning || state.isEditingEssay;
+    editTextBtn.addEventListener("click", startEssayEdit);
+    tpl.getElementById("status-left").after(editTextBtn);
 
     // Error
     if (state.error) {
@@ -491,7 +528,19 @@ function initEssayApp() {
 
     // Essay body
     const article = tpl.getElementById("essay-prose");
-    if (state.phase === "reading") {
+    if (state.isEditingEssay) {
+      const ta = document.createElement("textarea");
+      ta.className = "essay-edit-textarea";
+      ta.value = state.essayEditValue;
+      ta.addEventListener("input", (e) => { state.essayEditValue = e.target.value; });
+      const bar = document.createElement("div");
+      bar.className = "essay-edit-bar";
+      bar.appendChild(button("btn-primary", "Save", saveEssayEdit));
+      bar.appendChild(button("btn-ghost", "Cancel", cancelEssayEdit));
+      article.appendChild(ta);
+      article.appendChild(bar);
+      setTimeout(() => ta.focus(), 0);
+    } else if (state.phase === "reading") {
       article.textContent = state.essay;
     } else {
       renderEssaySegments(article);
@@ -731,6 +780,22 @@ function initEssayApp() {
     document.getElementById("next-rev-btn").addEventListener("click", nextRevision);
   }
 
+  function showEditorInfo(e) {
+    document.getElementById("editor-info-name").textContent = e.name;
+    document.getElementById("editor-info-byline").textContent = `${e.author} · ${e.source}`;
+    document.getElementById("editor-info-lead").textContent = e.lead || e.focus;
+    document.getElementById("editor-info-readmore").href = `/editors/${e.key}`;
+    document.getElementById("editor-info-modal").hidden = false;
+  }
+
+  function hideEditorInfo() {
+    document.getElementById("editor-info-modal").hidden = true;
+  }
+
+  document.getElementById("editor-info-backdrop").addEventListener("click", hideEditorInfo);
+  document.getElementById("editor-info-close").addEventListener("click", hideEditorInfo);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") hideEditorInfo(); });
+
   function extractSuggestionText(text) {
     const matches = [];
     const curlyRe = /“([\s\S]*?)”/g;
@@ -761,7 +826,7 @@ function initEssayApp() {
   // ==========================================================================
 
   document.addEventListener("keydown", (e) => {
-    if (state.phase !== "reviewing" || state.editingId) return;
+    if (state.phase !== "reviewing" || state.editingId || state.isEditingEssay) return;
     const tag = (e.target.tagName || "").toLowerCase();
     if (tag === "textarea" || tag === "input") return;
 
