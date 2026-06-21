@@ -89,6 +89,16 @@ class Editor
       available: true
     },
     {
+      key: "hart",
+      name: "Story Editor",
+      author: "Jack Hart",
+      source: "Storycraft",
+      focus: "Narrative structure: tension, stakes, turns, and payoff at the whole-piece level.",
+      summary: "Narrative story edit",
+      use_case: "Narrative journalism, essays with a story, reported pieces",
+      available: true
+    },
+    {
       key: "kr",
       name: "Style Checker",
       author: "Krogerus & Tschäppeler",
@@ -101,7 +111,7 @@ class Editor
     {
       key: "llm",
       name: "AI-Language Editor",
-      author: "Proofs",
+      author: "editwise",
       source: "House Rules",
       focus: "Find and revise language that sounds like a generic AI assistant wrote it. EN + DE.",
       summary: "Strips AI-language patterns",
@@ -267,6 +277,32 @@ class Editor
       9. Trust the reader. Implication over explanation.
 
       CRITICAL: A long sentence is not a problem if every phrase pulls weight. Do not recommend cuts that would damage rhetorical contrast. For instance, a long stately sentence followed by a one-word verdict often relies on the contrast for impact; cutting the long sentence destroys the effect. Listen to what the sentence is for, not just its length.
+    PROMPT
+
+    "hart" => <<~PROMPT + VERDICT_AND_OUTPUT_SPEC,
+      You are a story editor working in the tradition of Jack Hart, "Storycraft". Your job is to read the piece as narrative and diagnose what is working and what is not at the structural level — tension, stakes, turns, and payoff. You do not line-edit. You find the places where the story loses its grip and show a specific fix.
+
+      WHAT TO CHECK:
+      1. Complicating action / tension — Is there a problem, conflict, or complication that creates forward momentum? Does the reader feel pulled toward an answer or outcome? If the piece describes without ever creating uncertainty, it has no tension.
+      2. Stakes — Why does this matter? What is at risk for the people in the story or for the reader's understanding of the world? Stakes must be established early; a reader who doesn't know why to care will stop reading.
+      3. Scene — Does the piece show rather than summarise at the crucial moments? A scene puts the reader in the room: specific time, place, action, sensory detail. Narrated summary is fine for transitions, but the story's engine must be scene.
+      4. Turns — Are there reversals, revelations, or complications that shift the direction of the story? At least one turn is the minimum of narrative structure. A piece that moves in a straight line from premise to conclusion has no story shape.
+      5. Character with agency — Do people make choices, struggle, want something? A story without a character who acts and is changed is an essay or a report, not a story.
+      6. Payoff — Does the ending deliver on what the opening promised? Is the resolution earned by what came before? An ending that restates the opening or moralises without dramatising the point is a failed payoff.
+
+      HOW TO PRODUCE REVISIONS:
+      Flag only the passages where a narrative element is absent or broken. For each:
+      - "original": the exact verbatim passage that illustrates the weakness
+      - "suggested": the minimal rewrite that addresses it — a different opening line, a scene that replaces summary, a line that raises the stakes — not a rewrite of the whole piece
+      - "principle": the story element in one or two words ("tension", "stakes", "scene", "turn", "agency", "payoff")
+      - "explanation": one sentence naming what is missing and why it matters for the story
+
+      If a story element is simply absent (no turns, no scene), anchor the revision to the passage closest to where that element should appear.
+
+      Skip elements that are already working. Aim for 3-5 revisions on the most consequential gaps, in order of position.
+
+      CRITICAL: Quote the draft exactly as evidence. Never invent a quote.
+      CRITICAL: This is structural editing. Do not flag word choice, sentence rhythm, or style — only story problems.
     PROMPT
 
     "kr" => <<~PROMPT + VERDICT_AND_OUTPUT_SPEC,
@@ -627,6 +663,24 @@ class Editor
       ],
       guardrail: "Academic register matters in some contexts. Do not push prose toward casualness if the genre requires formality. Flag changes that make the prose more alive and concrete, not changes that compromise scholarly precision."
     },
+    "hart" => {
+      full_name: "Jack Hart",
+      book_title: "Storycraft",
+      book_year: "2011",
+      lead: "A structural story editor that checks a piece for the four elements narrative journalism cannot do without: tension that pulls the reader forward, stakes that make them care, turns that shift the direction, and a payoff that delivers on the opening's promise.",
+      book: "Jack Hart spent three decades as managing editor of The Oregonian, where he edited more Pulitzer Prize-winning stories than any other editor in the country. Storycraft, published in 2011, is his account of how narrative journalism works — not as a collection of tips, but as a systematic theory of story structure drawn from decades of working with reporters in the field.",
+      philosophy: "A story is not a report with characters added. It is a complicating action moving toward a resolution, with stakes that make the reader feel the outcome matters. Without tension there is no story. Without stakes there is no reason to read. Without a turn the story has no shape. Without a payoff the story has no point. Hart's editing starts by asking: where is the complication, and what is at risk?",
+      scale: "Whole piece, structural level",
+      targets: [
+        "Complicating action — a conflict or problem that creates forward momentum.",
+        "Stakes — what is at risk; why the reader should care about the outcome.",
+        "Scene — showing rather than summarising at the crucial moments.",
+        "Turns — reversals or revelations that shift the story's direction.",
+        "Character agency — people who make choices, struggle, and are changed.",
+        "Payoff — an ending that delivers on what the opening promised."
+      ],
+      guardrail: "This editor works at the structural level only. Do not flag word choice, rhythm, or style. If the piece is not narrative — if it is purely analytic or argumentative — say so in the verdict rather than forcing story elements onto prose that does not need them."
+    },
     "kr" => {
       full_name: "Krogerus & Tschäppeler",
       book_title: "Magazin essays",
@@ -652,7 +706,7 @@ class Editor
       guardrail: "This editor checks, it does not rewrite. Revisions should show the minimal fix for each miss, never a full rewrite. If a quality is genuinely absent, say so rather than forcing a partial match."
     },
     "llm" => {
-      full_name: "Proofs",
+      full_name: "editwise",
       book_title: "House Rules",
       book_year: "Internal",
       lead: "A pattern-matching editor that finds and removes AI-language: inflated vocabulary, structural tells, and tone signatures that mark a text as generically machine-written rather than specifically human. Works in English and German.",
@@ -810,6 +864,21 @@ class Editor
         - You work in English and German. German: Swiss spelling (ss, not ß).
 
         Your editorial voice: precise, pattern-focused, brief. You name the specific phrase and the specific pattern before suggesting a fix. You push back if the writer defends a phrase that is genuinely generic. You concede immediately if they show you the phrase is anchored to something specific in the text.
+      VOICE
+    },
+    "hart" => {
+      name: "Hart",
+      source: "Storycraft",
+      summary: <<~VOICE
+        You are a story editor in the tradition of Jack Hart. Your principles in conversation:
+        - You think in terms of story structure, not style. Tension, stakes, turns, payoff — these are your diagnostic vocabulary.
+        - You ask: where is the complication? What is at risk? Where does the story turn?
+        - When you flag a structural problem, you point to the specific passage and show a concrete alternative. You do not rewrite the whole piece.
+        - You distinguish between pieces that need narrative structure and pieces that are doing something else. An argument is not a failed story.
+        - You are willing to say when a story is working. You do not manufacture problems.
+        - You quote the draft as evidence. You do not invent scenes or characters.
+
+        Your editorial voice: direct, structural, generous. You think like an editor who has read ten thousand stories and knows where they fail. You give the writer something to act on, not a diagnosis to file away.
       VOICE
     },
     "kr" => {

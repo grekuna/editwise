@@ -1,5 +1,5 @@
 /*
- * Proofs — visual styling ported from the TSX prototype's inline styles
+ * editwise — visual styling ported from the TSX prototype's inline styles
  * and <style> block. Colors, type choices, and highlight states match the
  * original as closely as plain CSS allows.
  */
@@ -302,6 +302,19 @@ textarea, select, input, button { font-family: inherit; }
   white-space: pre-wrap;
   word-wrap: break-word;
 }
+
+/* Full Markdown rendering in reading phase */
+.essay-prose--rendered {
+  white-space: normal;
+}
+.essay-prose--rendered p { margin: 0 0 1.2em 0; }
+.essay-prose--rendered h1 { font-size: 28px; font-weight: 600; margin: 0 0 0.6em 0; letter-spacing: -0.01em; }
+.essay-prose--rendered h2 { font-size: 22px; font-weight: 600; margin: 1.4em 0 0.5em 0; }
+.essay-prose--rendered h3 { font-size: 18px; font-weight: 600; margin: 1.2em 0 0.4em 0; }
+.essay-prose--rendered ul, .essay-prose--rendered ol { margin: 0 0 1.2em 1.4em; padding: 0; }
+.essay-prose--rendered li { margin-bottom: 0.3em; }
+.essay-prose--rendered blockquote { margin: 0 0 1.2em 0; padding-left: 1em; border-left: 3px solid var(--border-strong); color: var(--ink-soft); font-style: italic; }
+.essay-prose--rendered code { font-family: var(--font-mono); font-size: 0.88em; background: var(--cream); padding: 1px 4px; border-radius: 2px; }
 
 .rev-pending {
   background-color: rgba(232, 213, 183, 0.50);
