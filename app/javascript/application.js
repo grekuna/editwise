@@ -1,4 +1,6 @@
-// Proofs — vanilla JS port of the original React/TSX prototype.
+import { marked } from "marked";
+
+// editwise — vanilla JS port of the original React/TSX prototype.
 //
 // This file owns the entire client-side state machine (input -> reading ->
 // reviewing) for the essay-editing app. It talks to the Rails backend via
@@ -542,7 +544,8 @@ function initEssayApp() {
       article.appendChild(bar);
       setTimeout(() => ta.focus(), 0);
     } else if (state.phase === "reading") {
-      article.textContent = state.essay;
+      article.innerHTML = marked.parse(state.essay);
+      article.classList.add("essay-prose--rendered");
     } else {
       renderEssaySegments(article);
     }
@@ -563,13 +566,15 @@ function initEssayApp() {
 
     buildSegments().forEach((seg) => {
       if (seg.kind === "text") {
-        article.appendChild(document.createTextNode(seg.content));
+        const el = document.createElement("span");
+        el.innerHTML = marked.parseInline(seg.content);
+        article.appendChild(el);
         return;
       }
       const isActive = seg.rev.id === state.activeId;
       const isAccepted = seg.rev.status === "accepted";
       const span = document.createElement("span");
-      span.textContent = seg.content;
+      span.innerHTML = marked.parseInline(seg.content);
       span.className = isAccepted
         ? isActive ? "rev-accepted-active" : "rev-accepted"
         : isActive ? "rev-active" : "rev-pending";

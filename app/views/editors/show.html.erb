@@ -3,8 +3,8 @@
 <header id="header">
   <div class="header-inner">
     <div class="logo">
-      <span class="logo-main">Proofs</span>
-      <span class="logo-sub">/ write fast, edit slowly</span>
+      <span class="logo-main">editwise</span>
+      <span class="logo-sub">/ The AI editor that makes you a better writer.</span>
     </div>
     <%= link_to "← Back", root_path, class: "btn-ghost" %>
   </div>
@@ -44,16 +44,22 @@
     </div>
   </div>
 
+  <% if details[:best_used] || details[:not_for] %>
   <div class="school-section primer-grid-2">
+    <% if details[:best_used] %>
     <div>
       <div class="mono-label">Best used</div>
       <div class="primer-prose-sm"><%= details[:best_used] %></div>
     </div>
+    <% end %>
+    <% if details[:not_for] %>
     <div>
       <div class="mono-label">Not for</div>
       <div class="primer-prose-sm muted"><%= details[:not_for] %></div>
     </div>
+    <% end %>
   </div>
+  <% end %>
 
   <div class="school-section">
     <div class="mono-label">Inside the prompt</div>
@@ -61,19 +67,24 @@
       What follows is the actual content sent to the editor model. The principles drive what gets flagged. The critical guard prevents principle-driven damage to deliberate stylistic choices.
     </div>
 
+    <% items = details[:principles] || details[:targets] %>
+    <% if items %>
     <div class="principles-box">
       <div class="mono-label-sm">Principles</div>
       <ol class="primer-list">
-        <% details[:principles].each do |p| %>
+        <% items.each do |p| %>
           <li><%= p %></li>
         <% end %>
       </ol>
     </div>
+    <% end %>
 
+    <% if details[:guardrail] %>
     <div class="guardrail-box">
       <div class="mono-label-sm guardrail-label">Critical guard</div>
       <div class="guardrail-text"><%= details[:guardrail] %></div>
     </div>
+    <% end %>
   </div>
 
   <div class="school-section">
