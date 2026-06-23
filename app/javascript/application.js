@@ -565,6 +565,7 @@ function initEssayApp() {
   // ==========================================================================
 
   function render() {
+    hideHoverPopup();
     renderHeader();
     if (state.report !== null || state.isGeneratingReport) {
       renderReportPhase();
@@ -727,13 +728,15 @@ function initEssayApp() {
       item.className = "efp-item" +
         (sel          ? " efp-item--selected"   : "") +
         (!e.available ? " efp-item--unavailable" : "");
-      item.innerHTML = `<div class="efp-item-name">${e.name}</div>
-        <div class="efp-item-sub">${authorDisplay(e)} · <em>${e.source}</em></div>`;
+      item.innerHTML = `<div class="efp-item-content">
+        <div class="efp-item-name">${e.name}</div>
+        <div class="efp-item-sub">${authorDisplay(e)} · <em>${e.source}</em></div>
+      </div>`;
       if (e.available) {
         item.addEventListener("click", () => { state.editorKey = e.key; render(); });
         let hoverTimer = null;
-        item.addEventListener("mouseenter", () => { hoverTimer = setTimeout(() => showEditorInfo(e), 600); });
-        item.addEventListener("mouseleave", () => { clearTimeout(hoverTimer); hoverTimer = null; });
+        item.addEventListener("mouseenter", () => { hoverTimer = setTimeout(() => showHoverPopup(e, item), 600); });
+        item.addEventListener("mouseleave", () => { clearTimeout(hoverTimer); hoverTimer = null; hideHoverPopup(); });
       }
       list.appendChild(item);
     });
@@ -1016,13 +1019,24 @@ function initEssayApp() {
           item.className = "efp-item" +
             (sel ? " efp-item--selected" : "") +
             (!e.available ? " efp-item--unavailable" : "");
-          item.innerHTML = `<div class="efp-item-name">${e.name}${countHtml}</div>
-            <div class="efp-item-sub">${authorDisplay(e)} · <em>${e.source}</em></div>`;
+          item.innerHTML = `<div class="efp-item-content">
+            <div class="efp-item-name">${e.name}${countHtml}</div>
+            <div class="efp-item-sub">${authorDisplay(e)} · <em>${e.source}</em></div>
+          </div>`;
           if (e.available) {
             item.addEventListener("click", () => { state.editorKey = e.key; render(); });
+            const runBtn = document.createElement("button");
+            runBtn.className = "efp-item-run";
+            runBtn.textContent = "Run";
+            runBtn.addEventListener("click", (ev) => {
+              ev.stopPropagation();
+              state.editorKey = e.key;
+              runPass();
+            });
+            item.appendChild(runBtn);
             let hoverTimer = null;
-            item.addEventListener("mouseenter", () => { hoverTimer = setTimeout(() => showEditorInfo(e), 600); });
-            item.addEventListener("mouseleave", () => { clearTimeout(hoverTimer); hoverTimer = null; });
+            item.addEventListener("mouseenter", () => { hoverTimer = setTimeout(() => showHoverPopup(e, item), 600); });
+            item.addEventListener("mouseleave", () => { clearTimeout(hoverTimer); hoverTimer = null; hideHoverPopup(); });
           }
           itemList.appendChild(item);
         });
@@ -1081,7 +1095,7 @@ function initEssayApp() {
       }
       const actions = document.createElement("div");
       actions.className = "efp-footer-actions";
-      if (state.phase === "reviewing" && !state.isEditingEssay) {
+      if (!state.isEditingEssay && !state.isRunning) {
         const editBtn = document.createElement("button");
         editBtn.className = "btn-ghost efp-sm-btn";
         editBtn.textContent = "Edit text";
@@ -1119,20 +1133,7 @@ function initEssayApp() {
     workspace.className = "essay-workspace";
     article.replaceWith(workspace);
 
-    if (state.phase === "reading") {
-      const ta = document.createElement("textarea");
-      ta.className = "essay-editor";
-      ta.value = state.essay;
-      ta.disabled = state.isRunning;
-      ta.placeholder = "Paste your essay here.";
-      ta.addEventListener("input", () => {
-        state.essay = ta.value;
-        ta.style.height = "auto";
-        ta.style.height = ta.scrollHeight + "px";
-      });
-      workspace.appendChild(ta);
-      setTimeout(() => { ta.style.height = ta.scrollHeight + "px"; }, 0);
-    } else if (state.isEditingEssay) {
+    if (state.isEditingEssay) {
       const ta = document.createElement("textarea");
       ta.className = "essay-editor";
       ta.value = state.essayEditValue;
@@ -1144,6 +1145,11 @@ function initEssayApp() {
       workspace.appendChild(ta);
       workspace.appendChild(bar);
       setTimeout(() => ta.focus(), 0);
+    } else if (state.phase === "reading") {
+      const prose = document.createElement("div");
+      prose.className = "essay-prose essay-prose--rendered";
+      prose.innerHTML = marked.parse(state.essay);
+      workspace.appendChild(prose);
     } else {
       const prose = document.createElement("article");
       prose.className = "essay-prose";
@@ -1389,6 +1395,30 @@ function initEssayApp() {
     footer.appendChild(bar);
     document.getElementById("prev-rev-btn").addEventListener("click", prevRevision);
     document.getElementById("next-rev-btn").addEventListener("click", nextRevision);
+  }
+
+  function showHoverPopup(editor, triggerEl) {
+    let popup = document.getElementById("efp-hover-popup");
+    if (!popup) {
+      popup = document.createElement("div");
+      popup.id = "efp-hover-popup";
+      popup.className = "efp-hover-popup";
+      document.body.appendChild(popup);
+    }
+    popup.innerHTML = `<div class="efp-popup-name">${editor.name}</div>
+      <div class="efp-popup-byline">${authorDisplay(editor)} · <em>${editor.source}</em></div>
+      <div class="efp-popup-lead">${editor.lead || editor.focus || ""}</div>`;
+    popup.hidden = false;
+    const r = triggerEl.getBoundingClientRect();
+    const popupW = 240;
+    popup.style.left = Math.max(8, r.left - popupW - 12) + "px";
+    popup.style.top = Math.round(r.top + r.height / 2) + "px";
+    popup.style.transform = "translateY(-50%)";
+  }
+
+  function hideHoverPopup() {
+    const popup = document.getElementById("efp-hover-popup");
+    if (popup) popup.hidden = true;
   }
 
   function showEditorInfo(e) {

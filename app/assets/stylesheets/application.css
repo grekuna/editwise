@@ -236,7 +236,30 @@ textarea, select, input, button { font-family: inherit; }
 .efp-title { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--mono-grey); }
 .efp-grip { color: var(--border-strong); font-size: 13px; line-height: 1; }
 .efp-list { max-height: 400px; overflow-y: auto; }
+.efp-item-content { flex: 1; min-width: 0; }
+.efp-item-run {
+  flex-shrink: 0;
+  padding: 3px 9px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--mono-grey);
+  border-radius: 2px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease, background 120ms ease, color 120ms ease;
+}
+.efp-item:hover .efp-item-run { opacity: 1; }
+.efp-item-run:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+
 .efp-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 10px 13px;
   border-bottom: 1px solid var(--border);
   cursor: pointer;
@@ -339,6 +362,22 @@ textarea, select, input, button { font-family: inherit; }
 .efp-hint { color: var(--mono-grey-light); margin-bottom: 4px; }
 .efp-footer-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .efp-sm-btn { font-size: 11px; padding: 4px 10px; }
+
+/* Hover popup — positioned near hovered panel item */
+.efp-hover-popup {
+  position: fixed;
+  width: 240px;
+  background: var(--paper);
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 4px 20px rgba(31,27,22,0.13), 0 1px 4px rgba(31,27,22,0.06);
+  border-radius: 3px;
+  padding: 16px 18px;
+  z-index: 400;
+  pointer-events: none;
+}
+.efp-popup-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+.efp-popup-byline { font-size: 11px; font-style: italic; color: var(--mono-grey-light); margin-bottom: 10px; }
+.efp-popup-lead { font-size: 13px; line-height: 1.6; color: var(--ink-soft); }
 
 /* ---- Pass history ---- */
 .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px; }
