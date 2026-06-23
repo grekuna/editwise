@@ -1,0 +1,69 @@
+<%# How it works — static editorial page %>
+
+<div class="how-page">
+  <header class="how-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a href="/" class="logo-link">
+          <span class="logo-main">editwise</span>
+          <span class="logo-sub">/ The AI editor that makes you a better writer.</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="how-main">
+    <div class="how-doc">
+
+      <div class="how-intro">
+        <h1 class="how-title">A revision team in your browser.</h1>
+        <p class="how-lead">Most writing tools give you one AI assistant with generic feedback. editwise works differently. You bring in a team of editors — each one trained on the principles of a master writing teacher — and they each read your draft through their own specific lens.</p>
+        <p>Paste your essay. Pick an editor. Run a pass. Accept what fits, decline what doesn't. Then bring in a different editor, or run the same one again. When you're done, you get a short debrief that draws lessons from the choices you made.</p>
+        <p>The editors don't always agree. That's the point.</p>
+        <a href="/" class="how-cta">Start editing →</a>
+      </div>
+
+      <div class="how-section">
+        <div class="how-section-label">How it works</div>
+        <ol class="how-steps">
+          <li><strong>Paste your essay</strong> into the document on the front page.</li>
+          <li><strong>Pick an editor</strong> from the panel on the right. Hover over any name to see what they look for.</li>
+          <li><strong>Click Run.</strong> The editor reads your draft and returns a set of revision suggestions, each one tied to a specific principle.</li>
+          <li><strong>Accept or decline</strong> each suggestion. The essay updates in place. Nothing is forced on you.</li>
+          <li><strong>Run another editor</strong> — or the same one again. Each pass is recorded.</li>
+          <li><strong>Finish the revision</strong> to get a tutor's debrief: what the session revealed about your writing, what your choices say about your instincts, and one thing to work on next.</li>
+        </ol>
+      </div>
+
+      <div class="how-section">
+        <div class="how-section-label">The revision team</div>
+        <p class="how-team-intro">Eleven editors. Each one grounded in a published writing teacher whose methods have stood up over decades. Together, they cover structure, stance, voice, clarity, rhythm, paragraph flow, and academic prose. You can think of it as having the following people look at your draft:</p>
+
+        <div class="how-editor-list">
+          <% @editors.select(&:available).each do |e| %>
+          <div class="how-editor-row">
+            <div class="how-editor-meta">
+              <span class="how-editor-name"><%= e.name %></span>
+              <span class="how-editor-source">after <%= e.author %> · <em><%= e.source %></em></span>
+            </div>
+            <div class="how-editor-focus"><%= e.focus %></div>
+          </div>
+          <% end %>
+        </div>
+
+        <p class="how-team-note">Each editor has a distinct voice and a distinct blind spot. Running more than one on the same draft is how you triangulate.</p>
+      </div>
+
+      <div class="how-section">
+        <div class="how-section-label">What it is not</div>
+        <p>editwise does not rewrite your essay. It does not generate text for you. It reads what you wrote and tells you where — in its judgement — the principles of good writing are being broken. You decide what to do with that.</p>
+        <p>The editors are opinionated. A Zinsser pass will flag clutter that a Klinkenborg pass would leave alone for the sake of rhythm. That tension is useful. Trust your ear, not the count of accepted suggestions.</p>
+      </div>
+
+      <div class="how-footer">
+        <a href="/" class="how-cta">Start editing →</a>
+      </div>
+
+    </div>
+  </main>
+</div>

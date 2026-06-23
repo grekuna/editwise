@@ -13,6 +13,7 @@ Rails.application.routes.draw do
   root "essays#index"
 
   get "essays/demo", to: "essays#demo"
+  get "how", to: "essays#how"
 
   get "editors/:key", to: "editors#show", as: :editor
   patch "editors/:key/prompt", to: "editors#update_prompt", as: :editor_prompt
@@ -20,4 +21,5 @@ Rails.application.routes.draw do
 
   post "passes", to: "passes#create"
   post "discussions", to: "discussions#create"
+  post "synthesis", to: "synthesis#create"
 end

@@ -9,4 +9,8 @@ class EssaysController < ApplicationController
   def demo
     render json: { essay: DemoEssay::TEXT }
   end
+
+  def how
+    @editors = Editor.all
+  end
 end
