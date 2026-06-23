@@ -69,6 +69,7 @@ function initEssayApp() {
     expandedHistoryId: null,
     pickerCollapsed: false,
     historyCollapsed: false,
+    editorFilter: "all",
     report: null,
     isGeneratingReport: false,
     panelPos: null,
@@ -988,7 +989,26 @@ function initEssayApp() {
       const body = document.createElement("div");
       body.className = "efp-body";
 
-      // Collapsible editor list (compact, same style as landing panel)
+      // Filter bar
+      const FILTERS = [
+        { value: "all",               label: "All" },
+        { value: "core_editorial",    label: "Core editorial" },
+        { value: "extended_editorial",label: "Extended editorial" },
+        { value: "core_academic",     label: "Core academic" },
+        { value: "extended_academic", label: "Extended academic" },
+      ];
+      const filterBar = document.createElement("div");
+      filterBar.className = "efp-filter-bar efp-section";
+      FILTERS.forEach(({ value, label }) => {
+        const btn = document.createElement("button");
+        btn.className = "efp-filter-btn" + (state.editorFilter === value ? " efp-filter-btn--active" : "");
+        btn.textContent = label;
+        btn.addEventListener("click", () => { state.editorFilter = value; render(); });
+        filterBar.appendChild(btn);
+      });
+      body.appendChild(filterBar);
+
+      // Collapsible editor list
       const editorSection = document.createElement("div");
       editorSection.className = "efp-section";
       const pickerHeader = collapsibleHeader(
@@ -999,9 +1019,12 @@ function initEssayApp() {
       pickerHeader.classList.add("efp-section-header");
       editorSection.appendChild(pickerHeader);
       if (!state.pickerCollapsed) {
+        const visibleEditors = state.editorFilter === "all"
+          ? editors
+          : editors.filter((e) => e.category === state.editorFilter);
         const itemList = document.createElement("div");
         itemList.className = "efp-list";
-        editors.forEach((e) => {
+        visibleEditors.forEach((e) => {
           const item = document.createElement("div");
           const sel = state.editorKey === e.key;
           const count = state.passCounts[e.key] || 0;
@@ -1033,22 +1056,6 @@ function initEssayApp() {
         editorSection.appendChild(itemList);
       }
       body.appendChild(editorSection);
-
-      // Pass history
-      if (state.passHistory.length > 0) {
-        const histEl = document.createElement("div");
-        histEl.className = "efp-section";
-        renderPassHistory(histEl);
-        body.appendChild(histEl);
-      }
-
-      // Verdict
-      if (state.phase === "reviewing" && state.verdict) {
-        const vd = document.createElement("div");
-        vd.className = "efp-section efp-verdict";
-        vd.innerHTML = `<div class="mono-label efp-verdict-label">Verdict</div><div class="efp-verdict-text">${state.verdict}</div>`;
-        body.appendChild(vd);
-      }
 
       // All resolved notice
       if (state.phase === "reviewing") {
@@ -1116,6 +1123,25 @@ function initEssayApp() {
     const main = document.getElementById("main");
     main.innerHTML = "";
     const tpl = document.getElementById("tpl-reading-phase").content.cloneNode(true);
+    const sheet = tpl.querySelector(".document-sheet--editing");
+
+    // Session header: verdict + pass history, above the essay
+    const hasVerdict = state.phase === "reviewing" && state.verdict;
+    const hasHistory = state.passHistory.length > 0;
+    if (hasVerdict || hasHistory) {
+      const sessionHeader = document.createElement("div");
+      sessionHeader.className = "doc-session-header";
+      if (hasVerdict) {
+        const vd = document.createElement("div");
+        vd.className = "doc-verdict";
+        vd.textContent = state.verdict;
+        sessionHeader.appendChild(vd);
+      }
+      if (hasHistory) {
+        renderPassHistory(sessionHeader);
+      }
+      sheet.insertBefore(sessionHeader, sheet.firstChild);
+    }
 
     // Essay workspace inside the document sheet
     const article = tpl.getElementById("essay-prose");

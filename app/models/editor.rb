@@ -16,7 +16,8 @@ class Editor
       focus: "Structure as form. Lede, kicker, geometric shape of the piece.",
       summary: "Whole-piece structure",
       use_case: "Pre-draft, post-draft",
-      available: true
+      available: true,
+      category: "core_editorial"
     },
     {
       key: "pinker",
@@ -26,7 +27,8 @@ class Editor
       focus: "Classic vs. self-conscious style. Curse-of-knowledge audit.",
       summary: "The writer's posture to the reader",
       use_case: "Stance check, mid-draft",
-      available: true
+      available: true,
+      category: "extended_academic"
     },
     {
       key: "classic",
@@ -36,7 +38,8 @@ class Editor
       focus: "Earned observation over performed thinking. Show, do not theorise.",
       summary: "Showing vs. theorising",
       use_case: "Content stance, mid-draft",
-      available: true
+      available: true,
+      category: "extended_academic"
     },
     {
       key: "gopen",
@@ -46,7 +49,8 @@ class Editor
       focus: "Reader-expectation flow at paragraph level. Topic and stress positions.",
       summary: "Paragraph cohesion and flow",
       use_case: "Dense or expository passages",
-      available: true
+      available: true,
+      category: "core_academic"
     },
     {
       key: "zinsser",
@@ -56,7 +60,8 @@ class Editor
       focus: "Nonfiction warmth. Strip clutter. Sound like a person.",
       summary: "Strips clutter, restores warmth",
       use_case: "Stiff or formal drafts",
-      available: true
+      available: true,
+      category: "core_editorial"
     },
     {
       key: "williams",
@@ -66,7 +71,8 @@ class Editor
       focus: "Sentence-level clarity. Characters as subjects, actions as verbs.",
       summary: "Sentence-level clarity",
       use_case: "Late line edit",
-      available: true
+      available: true,
+      category: "core_editorial"
     },
     {
       key: "klinkenborg",
@@ -76,7 +82,8 @@ class Editor
       focus: "Listen to the sentence. Rhythm through variation, not uniform brevity.",
       summary: "Sentence rhythm and ear",
       use_case: "Final polish",
-      available: true
+      available: true,
+      category: "extended_editorial"
     },
     {
       key: "sword",
@@ -86,7 +93,8 @@ class Editor
       focus: "Empirical markers of living academic prose. Anti-jargon.",
       summary: "Wakes up academic prose",
       use_case: "Papers, lectures",
-      available: true
+      available: true,
+      category: "core_academic"
     },
     {
       key: "hart",
@@ -96,7 +104,8 @@ class Editor
       focus: "Narrative structure: tension, stakes, turns, and payoff at the whole-piece level.",
       summary: "Narrative story edit",
       use_case: "Narrative journalism, essays with a story, reported pieces",
-      available: true
+      available: true,
+      category: "extended_editorial"
     },
     {
       key: "kr",
@@ -106,7 +115,8 @@ class Editor
       focus: "12-point fidelity check against the Krogerus & Tschäppeler Magazin essay style.",
       summary: "Magazin essay style check",
       use_case: "Short essays and columns, 250-450 words",
-      available: true
+      available: true,
+      category: "extended_editorial"
     },
     {
       key: "llm",
@@ -116,7 +126,8 @@ class Editor
       focus: "Find and revise language that sounds like a generic AI assistant wrote it. EN + DE.",
       summary: "Strips AI-language patterns",
       use_case: "Any draft, especially AI-assisted",
-      available: true
+      available: true,
+      category: "core_editorial"
     }
   ].freeze
 
@@ -898,7 +909,7 @@ class Editor
     }
   }.freeze
 
-  attr_reader :key, :name, :author, :source, :focus, :summary, :use_case, :available
+  attr_reader :key, :name, :author, :source, :focus, :summary, :use_case, :available, :category
 
   def initialize(attrs)
     @key = attrs[:key]
@@ -909,6 +920,7 @@ class Editor
     @summary = attrs[:summary]
     @use_case = attrs[:use_case]
     @available = attrs[:available]
+    @category = attrs[:category]
   end
 
   def self.all

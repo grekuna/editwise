@@ -361,6 +361,47 @@ textarea, select, input, button { font-family: inherit; }
 .efp-footer-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .efp-sm-btn { font-size: 11px; padding: 4px 10px; }
 
+/* Editor filter bar */
+.efp-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 10px;
+}
+.efp-filter-btn {
+  padding: 3px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--mono-grey);
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 100ms ease;
+}
+.efp-filter-btn:hover { border-color: var(--ink); color: var(--ink); }
+.efp-filter-btn--active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* Session header: verdict + history inside the document sheet */
+.doc-session-header {
+  padding: 36px 52px 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+.doc-verdict {
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  margin-bottom: 28px;
+}
+.doc-session-header .pass-history { margin-bottom: 0; }
+.doc-session-header .history-row { border-left: none; border-right: none; border-radius: 0; margin-bottom: 0; border-bottom: none; border-top: 1px solid var(--border); }
+.doc-session-header .history-row:first-of-type { border-top: none; }
+
 /* Hover popup — positioned near hovered panel item */
 .efp-hover-popup {
   position: fixed;

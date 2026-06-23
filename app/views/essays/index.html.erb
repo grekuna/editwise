@@ -5,7 +5,7 @@
 <div id="app" data-editors="<%= @editors.map { |e|
       { key: e.key, name: e.name, author: e.author, source: e.source,
         focus: e.focus, useCase: e.use_case, available: e.available,
-        lead: e.details[:lead] }
+        lead: e.details[:lead], category: e.category }
     }.to_json %>">
   <header id="header">
     <div class="header-inner">
