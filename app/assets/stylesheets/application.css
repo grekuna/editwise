@@ -385,22 +385,71 @@ textarea, select, input, button { font-family: inherit; }
 .efp-filter-btn:hover { border-color: var(--ink); color: var(--ink); }
 .efp-filter-btn--active { background: var(--ink); color: #fff; border-color: var(--ink); }
 
-/* Session header: verdict + history inside the document sheet */
-.doc-session-header {
-  padding: 36px 52px 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 0;
+/* Editorial header — sits above the essay in the document sheet */
+.doc-editorial-header {
+  background: var(--cream);
+  border-bottom: 1px solid var(--border-strong);
+  padding: 22px 52px 0;
 }
-.doc-verdict {
+.doc-status-line {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.doc-status-editor {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.doc-status-sep {
+  color: var(--border-strong);
+  font-size: 12px;
+}
+.doc-status-counts {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--mono-grey);
+}
+.doc-status-counts--done {
+  color: var(--green);
+}
+.doc-verdict-block {
+  padding: 0 0 20px 16px;
+  border-left: 3px solid var(--accent);
+  margin-bottom: 4px;
+}
+.doc-verdict-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 7px;
+}
+.doc-verdict-text {
   font-style: italic;
-  font-size: 17px;
+  font-size: 16px;
   line-height: 1.65;
   color: var(--ink-soft);
-  margin-bottom: 28px;
 }
-.doc-session-header .pass-history { margin-bottom: 0; }
-.doc-session-header .history-row { border-left: none; border-right: none; border-radius: 0; margin-bottom: 0; border-bottom: none; border-top: 1px solid var(--border); }
-.doc-session-header .history-row:first-of-type { border-top: none; }
+.doc-editorial-header .pass-history { margin-bottom: 0; }
+.doc-editorial-header .history-row {
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+  border-top: 1px solid var(--border);
+  background: transparent;
+}
+.doc-editorial-header .history-row-header { background: transparent; }
+.doc-editorial-header .history-row-header:hover { background: rgba(0,0,0,0.03); }
 
 /* Hover popup — positioned near hovered panel item */
 .efp-hover-popup {

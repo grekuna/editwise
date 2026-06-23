@@ -1072,19 +1072,10 @@ function initEssayApp() {
 
       panel.appendChild(body);
 
-      // Footer: status + action buttons
+      // Footer: action buttons only (status lives in the document header)
       const footer = document.createElement("div");
       footer.className = "efp-status-footer";
-      if (state.phase === "reviewing" && state.appliedEditor) {
-        const e = editorByKey(state.appliedEditor);
-        const pendingCount = pendingRevisions().length;
-        const accepted = state.revisions.filter((r) => r.status === "accepted").length;
-        const declined = state.revisions.filter((r) => r.status === "declined").length;
-        const counts = document.createElement("div");
-        counts.className = "efp-counts mono-label";
-        counts.innerHTML = `<span class="editor-badge">${e?.name || ""}</span> ${pendingCount} pending · ${accepted} accepted · ${declined} declined`;
-        footer.appendChild(counts);
-      } else if (state.phase === "reading") {
+      if (state.phase === "reading") {
         const hint = document.createElement("div");
         hint.className = "efp-hint mono-label";
         hint.textContent = "Select an editor and run a pass";
@@ -1125,22 +1116,64 @@ function initEssayApp() {
     const tpl = document.getElementById("tpl-reading-phase").content.cloneNode(true);
     const sheet = tpl.querySelector(".document-sheet--editing");
 
-    // Session header: verdict + pass history, above the essay
-    const hasVerdict = state.phase === "reviewing" && state.verdict;
-    const hasHistory = state.passHistory.length > 0;
-    if (hasVerdict || hasHistory) {
-      const sessionHeader = document.createElement("div");
-      sessionHeader.className = "doc-session-header";
-      if (hasVerdict) {
-        const vd = document.createElement("div");
-        vd.className = "doc-verdict";
-        vd.textContent = state.verdict;
-        sessionHeader.appendChild(vd);
+    // Editorial header: status + verdict + history, above the essay
+    if (state.phase === "reviewing" && state.appliedEditor) {
+      const hdr = document.createElement("div");
+      hdr.className = "doc-editorial-header";
+
+      // Status line: editor name + revision counts
+      const e = editorByKey(state.appliedEditor);
+      const pendingCount = pendingRevisions().length;
+      const accepted = state.revisions.filter((r) => r.status === "accepted").length;
+      const declined  = state.revisions.filter((r) => r.status === "declined").length;
+      const allDone   = state.revisions.length > 0 && pendingCount === 0;
+
+      const statusLine = document.createElement("div");
+      statusLine.className = "doc-status-line";
+
+      const editorLabel = document.createElement("span");
+      editorLabel.className = "doc-status-editor";
+      editorLabel.textContent = e?.name || "";
+      statusLine.appendChild(editorLabel);
+
+      const sep = document.createElement("span");
+      sep.className = "doc-status-sep";
+      sep.textContent = "·";
+      statusLine.appendChild(sep);
+
+      const countsEl = document.createElement("span");
+      countsEl.className = "doc-status-counts" + (allDone ? " doc-status-counts--done" : "");
+      countsEl.textContent = allDone
+        ? `All reviewed — ${accepted} accepted · ${declined} declined`
+        : `${pendingCount} pending · ${accepted} accepted · ${declined} declined`;
+      statusLine.appendChild(countsEl);
+
+      hdr.appendChild(statusLine);
+
+      // Verdict block
+      if (state.verdict) {
+        const verdictBlock = document.createElement("div");
+        verdictBlock.className = "doc-verdict-block";
+
+        const verdictLabel = document.createElement("div");
+        verdictLabel.className = "doc-verdict-label";
+        verdictLabel.textContent = "Verdict";
+        verdictBlock.appendChild(verdictLabel);
+
+        const verdictText = document.createElement("div");
+        verdictText.className = "doc-verdict-text";
+        verdictText.textContent = state.verdict;
+        verdictBlock.appendChild(verdictText);
+
+        hdr.appendChild(verdictBlock);
       }
-      if (hasHistory) {
-        renderPassHistory(sessionHeader);
+
+      // Pass history (collapsible)
+      if (state.passHistory.length > 0) {
+        renderPassHistory(hdr);
       }
-      sheet.insertBefore(sessionHeader, sheet.firstChild);
+
+      sheet.insertBefore(hdr, sheet.firstChild);
     }
 
     // Essay workspace inside the document sheet
