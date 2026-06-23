@@ -20,4 +20,5 @@ Rails.application.routes.draw do
 
   post "passes", to: "passes#create"
   post "discussions", to: "discussions#create"
+  post "synthesis", to: "synthesis#create"
 end

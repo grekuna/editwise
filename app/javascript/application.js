@@ -56,6 +56,7 @@ function initEssayApp() {
     isRunning: false,
     runningEditor: null,
     appliedEditor: null,
+    passCounts: {}, // editorKey -> number of completed passes
     verdict: "",
     copyToast: false,
     discussingId: null,
@@ -64,12 +65,162 @@ function initEssayApp() {
     isDiscussing: false,
     isEditingEssay: false,
     essayEditValue: "",
+    passHistory: [], // [{id, editorKey, editorName, timestamp, verdict, revisions}]
+    expandedHistoryId: null,
+    pickerCollapsed: false,
+    historyCollapsed: false,
+    report: null,
+    isGeneratingReport: false,
+    panelPos: null,
   };
 
   const segmentRefs = {};
 
+  // Scope overlap groups — used to dim editors whose territory is already covered
+  // Animated verb phrases shown while a pass runs
+  const RUNNING_VERBS = {
+    mcphee:      ["Reading structure", "Tracing the narrative arc", "Checking your lede", "Looking at sequence", "Following the kicker"],
+    pinker:      ["Checking confidence", "Looking for hedging", "Reviewing directness", "Reading for stance"],
+    classic:     ["Checking voice", "Looking for earned content", "Reading for stance"],
+    gopen:       ["Parsing sentence flow", "Checking stress positions", "Looking for topic strings", "Reviewing reader expectations"],
+    zinsser:     ["Hunting for clutter", "Checking simplicity", "Looking for warmth", "Reviewing word choice"],
+    williams:    ["Checking sentence structure", "Looking for nominalisations", "Reviewing passive constructions", "Checking verb strength"],
+    klinkenborg: ["Reading each sentence", "Listening to the rhythm", "Checking line by line", "Following the breath"],
+    sword:       ["Reviewing academic register", "Looking for zombie nouns", "Checking for human actors", "Reviewing jargon"],
+    hart:        ["Checking narrative tension", "Looking for the complicating action", "Reviewing stakes", "Looking for the turn", "Checking the payoff"],
+    kr:          ["Checking the hook", "Looking for the named anchor", "Reviewing rhythm variance", "Looking for the turn", "Checking the ending"],
+    llm:         ["Scanning vocabulary", "Checking for generic phrases", "Looking for AI patterns", "Reviewing filler words"],
+  };
+  const FALLBACK_VERBS = ["Reading your essay", "Applying editorial principles", "Flagging revisions", "Building your feedback"];
+
+  let phraseIntervalId = null;
+
+  function startRunningAnimation(editorKey) {
+    const bodyEl = document.getElementById("running-banner-body");
+    if (!bodyEl) return;
+    const verbs = RUNNING_VERBS[editorKey] || FALLBACK_VERBS;
+    let idx = 0;
+    bodyEl.textContent = verbs[0] + "…";
+    phraseIntervalId = setInterval(() => {
+      bodyEl.classList.add("phrase-out");
+      setTimeout(() => {
+        idx = (idx + 1) % verbs.length;
+        bodyEl.textContent = verbs[idx] + "…";
+        bodyEl.classList.remove("phrase-out");
+      }, 350);
+    }, 2200);
+  }
+
   function editorByKey(key) {
     return editors.find((e) => e.key === key);
+  }
+
+  function authorDisplay(e) {
+    return e.author === "editwise" ? e.author : `after ${e.author}`;
+  }
+
+  function applyMarkdownFormat(ta, format) {
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const val = ta.value;
+    const selected = val.slice(start, end);
+
+    let before, newText, newStart, newEnd;
+
+    if (format === "bold") {
+      const inner = selected || "bold";
+      before = val.slice(0, start);
+      newText = `**${inner}**`;
+      newStart = start + 2;
+      newEnd = newStart + inner.length;
+    } else if (format === "italic") {
+      const inner = selected || "italic";
+      before = val.slice(0, start);
+      newText = `*${inner}*`;
+      newStart = start + 1;
+      newEnd = newStart + inner.length;
+    } else if (format === "h1" || format === "h2") {
+      const prefix = format === "h1" ? "# " : "## ";
+      const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+      const lineEndRaw = val.indexOf("\n", start);
+      const lineEnd = lineEndRaw === -1 ? val.length : lineEndRaw;
+      const lineContent = val.slice(lineStart, lineEnd);
+      const stripped = lineContent.replace(/^#{1,6} /, "");
+      const already = lineContent.startsWith(prefix);
+      const newLine = already ? stripped : prefix + stripped;
+      before = val.slice(0, lineStart);
+      const after = val.slice(lineEnd);
+      ta.value = before + newLine + after;
+      ta.selectionStart = ta.selectionEnd = lineStart + newLine.length;
+      ta.focus();
+      if (state.phase === "reading") state.essay = ta.value;
+      else state.essayEditValue = ta.value;
+      return;
+    }
+
+    const after = val.slice(end);
+    ta.value = before + newText + after;
+    ta.selectionStart = newStart;
+    ta.selectionEnd = newEnd;
+    ta.focus();
+    if (state.phase === "reading") state.essay = ta.value;
+    else state.essayEditValue = ta.value;
+  }
+
+  function buildMarkdownToolbar() {
+    const bar = document.createElement("div");
+    bar.className = "essay-toolbar";
+    [
+      { label: "B", md: "bold", title: "Bold (**text**)" },
+      { label: "I", md: "italic", title: "Italic (*text*)" },
+      { sep: true },
+      { label: "H1", md: "h1", title: "Heading 1" },
+      { label: "H2", md: "h2", title: "Heading 2" },
+    ].forEach((t) => {
+      if (t.sep) {
+        const s = document.createElement("span");
+        s.className = "toolbar-sep";
+        bar.appendChild(s);
+        return;
+      }
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "toolbar-btn";
+      btn.dataset.md = t.md;
+      btn.title = t.title;
+      btn.textContent = t.label;
+      bar.appendChild(btn);
+    });
+    return bar;
+  }
+
+  function wireToolbar(toolbar, ta) {
+    toolbar.querySelectorAll("[data-md]").forEach((btn) => {
+      btn.addEventListener("mousedown", (ev) => {
+        ev.preventDefault();
+        applyMarkdownFormat(ta, btn.dataset.md);
+      });
+    });
+  }
+
+  function collapsibleHeader(labelText, isCollapsed, onToggle, rightEl = null) {
+    const header = document.createElement("div");
+    header.className = "section-header";
+    const left = document.createElement("div");
+    left.className = "section-header-left";
+    const label = document.createElement("span");
+    label.className = "mono-label";
+    label.textContent = labelText;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "section-toggle";
+    btn.setAttribute("aria-expanded", String(!isCollapsed));
+    btn.textContent = isCollapsed ? "▸" : "▾";
+    btn.addEventListener("click", onToggle);
+    left.append(label, btn);
+    header.appendChild(left);
+    if (rightEl) header.appendChild(rightEl);
+    return header;
   }
 
   function pendingRevisions() {
@@ -204,6 +355,19 @@ function initEssayApp() {
 
   async function runPass(editorOverride) {
     const useKey = editorOverride && editorByKey(editorOverride) ? editorOverride : state.editorKey;
+
+    // Snapshot the outgoing pass before wiping state
+    if (state.appliedEditor && state.revisions.length > 0) {
+      state.passHistory.push({
+        id: `pass-${Date.now()}`,
+        editorKey: state.appliedEditor,
+        editorName: editorByKey(state.appliedEditor)?.name || state.appliedEditor,
+        timestamp: new Date(),
+        verdict: state.verdict,
+        revisions: state.revisions.map((r) => ({ ...r })),
+      });
+    }
+
     state.isRunning = true;
     state.runningEditor = useKey;
     state.error = null;
@@ -218,6 +382,7 @@ function initEssayApp() {
       state.revisions = (data.revisions || []).map((r) => ({ ...r, userEdit: null, appliedText: null }));
       state.activeId = state.revisions[0]?.id || null;
       state.appliedEditor = useKey;
+      state.passCounts[useKey] = (state.passCounts[useKey] || 0) + 1;
       state.phase = "reviewing";
     } catch (e) {
       state.error = e.message || "Something went wrong.";
@@ -267,8 +432,43 @@ function initEssayApp() {
       error: null,
       editingId: null,
       phase: "input",
+      passHistory: [],
+      passCounts: {},
+      report: null,
+      isGeneratingReport: false,
+      _lastScrolledId: null,
+      panelPos: null,
     });
     render();
+  }
+
+  async function finishRevision() {
+    if (state.isGeneratingReport || state.passHistory.length === 0) return;
+    state.isGeneratingReport = true;
+    state.report = null;
+    render();
+
+    try {
+      const passes = state.passHistory.map((pass) => ({
+        editorName: pass.editorName,
+        editorFocus: editorByKey(pass.editorKey)?.focus || "",
+        verdict: pass.verdict,
+        revisions: pass.revisions.map((r) => ({
+          original: r.original,
+          suggested: r.suggested,
+          principle: r.principle,
+          status: r.status,
+        })),
+      }));
+
+      const data = await postJSON("/synthesis", { essay: state.essay, passes });
+      state.report = data.synthesis;
+    } catch (e) {
+      state.error = e.message || "Could not generate report.";
+    } finally {
+      state.isGeneratingReport = false;
+      render();
+    }
   }
 
   async function copyEssay() {
@@ -366,7 +566,9 @@ function initEssayApp() {
 
   function render() {
     renderHeader();
-    if (state.phase === "input") {
+    if (state.report !== null || state.isGeneratingReport) {
+      renderReportPhase();
+    } else if (state.phase === "input") {
       renderInputPhase();
     } else {
       renderReadingOrReviewingPhase();
@@ -374,30 +576,181 @@ function initEssayApp() {
     renderFooterNav();
   }
 
+  function renderReportPhase() {
+    removeEditorPanel();
+    const main = document.getElementById("main");
+    main.innerHTML = "";
+
+    const wrap = document.createElement("div");
+    wrap.className = "report-wrap";
+
+    if (state.isGeneratingReport) {
+      const loading = document.createElement("div");
+      loading.className = "report-loading";
+      loading.innerHTML = `
+        <div class="report-loading-dot"></div>
+        <div>
+          <div class="report-loading-title">Reviewing your session…</div>
+          <div class="report-loading-body">Reading your choices, finding patterns. Usually takes 15–20 seconds.</div>
+        </div>`;
+      wrap.appendChild(loading);
+    } else if (state.report) {
+      // Stats bar
+      const totalPasses = state.passHistory.length;
+      const totalAccepted = state.passHistory.reduce((n, p) => n + p.revisions.filter(r => r.status === "accepted").length, 0);
+      const totalDeclined = state.passHistory.reduce((n, p) => n + p.revisions.filter(r => r.status === "declined").length, 0);
+      const editorNames = [...new Set(state.passHistory.map(p => p.editorName))].join(", ");
+
+      const stats = document.createElement("div");
+      stats.className = "report-stats";
+      stats.innerHTML = `
+        <span class="report-stat">${totalPasses} ${totalPasses === 1 ? "pass" : "passes"}</span>
+        <span class="report-stat-sep">·</span>
+        <span class="report-stat">${totalAccepted} accepted</span>
+        <span class="report-stat-sep">·</span>
+        <span class="report-stat">${totalDeclined} declined</span>
+        <span class="report-stat-sep">·</span>
+        <span class="report-stat report-stat--editors">${editorNames}</span>`;
+      wrap.appendChild(stats);
+
+      const prose = document.createElement("div");
+      prose.className = "report-prose";
+      prose.innerHTML = marked.parse(state.report);
+      wrap.appendChild(prose);
+    }
+
+    main.appendChild(wrap);
+  }
+
   function renderHeader() {
     const actions = document.getElementById("header-actions");
     actions.innerHTML = "";
-    if (state.phase === "reading" || state.phase === "reviewing") {
-      const runBtn = document.createElement("button");
-      runBtn.className = "btn-primary";
-      runBtn.disabled = state.isRunning || !state.essay;
-      const editor = editorByKey(state.editorKey);
-      runBtn.textContent = state.isRunning
-        ? "Reading…"
-        : state.phase === "reviewing"
-          ? `Run ${editor?.name} again`
-          : `Run ${editor?.name}`;
-      runBtn.onclick = () => runPass();
 
+    if (state.report !== null || state.isGeneratingReport) {
+      const backBtn = document.createElement("button");
+      backBtn.className = "btn-ghost";
+      backBtn.textContent = "← Back to essay";
+      backBtn.onclick = () => { state.report = null; state.isGeneratingReport = false; render(); };
+      const newBtn = document.createElement("button");
+      newBtn.className = "btn-ghost";
+      newBtn.textContent = "New essay";
+      newBtn.onclick = startOver;
+      actions.append(backBtn, newBtn);
+      return;
+    }
+
+    if (state.phase === "reading" || state.phase === "reviewing") {
       const newBtn = document.createElement("button");
       newBtn.className = "btn-ghost";
       newBtn.disabled = state.isRunning;
       newBtn.textContent = "New essay";
-      newBtn.title = "Start over with a new essay";
       newBtn.onclick = startOver;
+      actions.appendChild(newBtn);
 
-      actions.append(runBtn, newBtn);
+      if (state.passHistory.length > 0 && !state.isRunning) {
+        const finishBtn = document.createElement("button");
+        finishBtn.className = "btn-finish";
+        finishBtn.textContent = "Finish revision →";
+        finishBtn.onclick = finishRevision;
+        actions.appendChild(finishBtn);
+      }
     }
+  }
+
+  function setupPanelDrag(panel, handle) {
+    let dragging = false;
+    let ox = 0, oy = 0;
+    handle.addEventListener("mousedown", (ev) => {
+      dragging = true;
+      const r = panel.getBoundingClientRect();
+      ox = ev.clientX - r.left;
+      oy = ev.clientY - r.top;
+      ev.preventDefault();
+    });
+    const onMove = (ev) => {
+      if (!dragging) return;
+      panel.style.left  = (ev.clientX - ox) + "px";
+      panel.style.top   = (ev.clientY - oy) + "px";
+      panel.style.right = "auto";
+    };
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      const r = panel.getBoundingClientRect();
+      state.panelPos = { left: Math.round(r.left), top: Math.round(r.top) };
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup",   onUp);
+    panel._dragCleanup = () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup",   onUp);
+    };
+  }
+
+  function removeEditorPanel() {
+    const p = document.getElementById("editor-float-panel");
+    if (p) { if (p._dragCleanup) p._dragCleanup(); p.remove(); }
+  }
+
+  function renderEditorPanel(hasText) {
+    let panel = document.getElementById("editor-float-panel");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id   = "editor-float-panel";
+      panel.className = "editor-float-panel";
+      if (state.panelPos) {
+        panel.style.left  = state.panelPos.left + "px";
+        panel.style.top   = state.panelPos.top  + "px";
+        panel.style.right = "auto";
+      }
+      document.body.appendChild(panel);
+    } else {
+      panel.className = "editor-float-panel";
+      if (panel._dragCleanup) { panel._dragCleanup(); panel._dragCleanup = null; }
+    }
+
+    panel.innerHTML = "";
+
+    // Handle
+    const handle = document.createElement("div");
+    handle.className = "efp-handle";
+    handle.innerHTML = `<span class="efp-title">Editors</span><span class="efp-grip">⠿</span>`;
+    panel.appendChild(handle);
+    setupPanelDrag(panel, handle);
+
+    // Editor list
+    const list = document.createElement("div");
+    list.className = "efp-list";
+    editors.forEach((e) => {
+      const item = document.createElement("div");
+      const sel  = state.editorKey === e.key;
+      item.className = "efp-item" +
+        (sel          ? " efp-item--selected"   : "") +
+        (!e.available ? " efp-item--unavailable" : "");
+      item.innerHTML = `<div class="efp-item-name">${e.name}</div>
+        <div class="efp-item-sub">${authorDisplay(e)} · <em>${e.source}</em></div>`;
+      if (e.available) {
+        item.addEventListener("click", () => { state.editorKey = e.key; render(); });
+      }
+      list.appendChild(item);
+    });
+    panel.appendChild(list);
+
+    // Footer
+    const footer = document.createElement("div");
+    footer.className = "efp-footer";
+    const demoBtn = document.createElement("button");
+    demoBtn.className = "btn-ghost efp-demo-btn";
+    demoBtn.textContent = "Load demo";
+    demoBtn.addEventListener("click", loadDemo);
+    const continueBtn = document.createElement("button");
+    continueBtn.id = "panel-continue-btn";
+    continueBtn.className = "btn-primary";
+    continueBtn.textContent = "Continue →";
+    continueBtn.disabled = !hasText;
+    continueBtn.addEventListener("click", submitEssay);
+    footer.append(demoBtn, continueBtn);
+    panel.appendChild(footer);
   }
 
   function renderInputPhase() {
@@ -409,150 +762,382 @@ function initEssayApp() {
     textarea.value = state.pasteValue;
     textarea.addEventListener("input", (e) => {
       state.pasteValue = e.target.value;
-      document.getElementById("continue-btn").disabled = !state.pasteValue.trim();
-    });
-
-    tpl.getElementById("load-demo-btn").addEventListener("click", loadDemo);
-    const continueBtn = tpl.getElementById("continue-btn");
-    continueBtn.disabled = !state.pasteValue.trim();
-    continueBtn.addEventListener("click", submitEssay);
-
-    const cardsContainer = tpl.getElementById("editor-cards");
-    editors.forEach((e) => {
-      const card = document.getElementById("tpl-editor-card").content.cloneNode(true);
-      const btn = card.querySelector(".editor-card");
-      btn.disabled = !e.available;
-      card.querySelector(".editor-card-name").textContent = e.name;
-      card.querySelector(".editor-card-author").innerHTML = `${e.author}, <em>${e.source}</em>`;
-      card.querySelector(".editor-card-focus").textContent = e.focus;
-      btn.addEventListener("click", () => {
-        if (e.available) showEditorInfo(e);
-      });
-      cardsContainer.appendChild(card);
+      const btn = document.getElementById("panel-continue-btn");
+      if (btn) btn.disabled = !state.pasteValue.trim();
     });
 
     main.appendChild(tpl);
+    renderEditorPanel(!!state.pasteValue.trim());
+
+    setTimeout(() => textarea.focus(), 0);
+  }
+
+  function renderPassHistory(container) {
+    if (state.passHistory.length === 0) return;
+
+    const section = document.createElement("div");
+    section.className = "pass-history";
+
+    const header = collapsibleHeader(
+      `Past passes`,
+      state.historyCollapsed,
+      () => { state.historyCollapsed = !state.historyCollapsed; render(); }
+    );
+    section.appendChild(header);
+
+    if (state.historyCollapsed) {
+      container.appendChild(section);
+      return;
+    }
+
+    [...state.passHistory].reverse().forEach((pass) => {
+      const accepted = pass.revisions.filter((r) => r.status === "accepted").length;
+      const declined = pass.revisions.filter((r) => r.status === "declined").length;
+      const isExpanded = state.expandedHistoryId === pass.id;
+
+      const row = document.createElement("div");
+      row.className = "history-row" + (isExpanded ? " history-row--open" : "");
+
+      // Header
+      const header = document.createElement("div");
+      header.className = "history-row-header";
+
+      const name = document.createElement("span");
+      name.className = "history-editor-name";
+      name.textContent = pass.editorName;
+
+      const stats = document.createElement("span");
+      stats.className = "history-stats";
+      const parts = [];
+      if (accepted > 0) parts.push(`${accepted} accepted`);
+      if (declined > 0) parts.push(`${declined} declined`);
+      if (parts.length === 0) parts.push("no revisions");
+      stats.textContent = parts.join(" · ");
+
+      const time = document.createElement("span");
+      time.className = "history-time";
+      time.textContent = pass.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+      const chevron = document.createElement("span");
+      chevron.className = "history-chevron";
+      chevron.textContent = isExpanded ? "▴" : "▾";
+
+      header.append(name, stats, time, chevron);
+      header.addEventListener("click", () => {
+        state.expandedHistoryId = isExpanded ? null : pass.id;
+        render();
+      });
+      row.appendChild(header);
+
+      if (isExpanded) {
+        if (pass.verdict) {
+          const verdict = document.createElement("div");
+          verdict.className = "history-verdict";
+          verdict.textContent = pass.verdict;
+          row.appendChild(verdict);
+        }
+
+        const list = document.createElement("div");
+        list.className = "history-rev-list";
+
+        pass.revisions.forEach((rev) => {
+          const item = document.createElement("div");
+          item.className = `history-rev-item history-rev-item--${rev.status}`;
+
+          const meta = document.createElement("div");
+          meta.className = "history-rev-meta";
+
+          const principle = document.createElement("span");
+          principle.className = "rev-principle";
+          principle.textContent = rev.principle;
+          meta.appendChild(principle);
+
+          const badge = document.createElement("span");
+          badge.className = `history-rev-badge history-rev-badge--${rev.status}`;
+          badge.textContent = rev.status;
+          meta.appendChild(badge);
+
+          item.appendChild(meta);
+
+          const original = document.createElement("div");
+          original.className = "history-rev-original";
+          original.innerHTML = marked.parseInline(`"${rev.original}"`);
+          item.appendChild(original);
+
+          if (rev.status === "accepted") {
+            const applied = document.createElement("div");
+            applied.className = "history-rev-applied";
+            applied.innerHTML = "→ " + marked.parseInline(`"${rev.appliedText || rev.suggested}"`);
+            item.appendChild(applied);
+          }
+
+          list.appendChild(item);
+        });
+
+        row.appendChild(list);
+      }
+
+      section.appendChild(row);
+    });
+
+    container.appendChild(section);
+  }
+
+  function buildCompactCard(e) {
+    const card = document.getElementById("tpl-editor-compact-card").content.cloneNode(true);
+    const wrapper = card.querySelector(".compact-card");
+    const isSelected = state.editorKey === e.key;
+    wrapper.classList.toggle("compact-card-active", isSelected);
+    card.querySelector(".compact-card-name").textContent = e.name;
+    card.querySelector(".compact-card-author").textContent = authorDisplay(e);
+    card.querySelector(".compact-card-usecase").textContent = e.focus || e.useCase;
+    const count = state.passCounts[e.key] || 0;
+    if (count > 0) {
+      const badge = document.createElement("span");
+      badge.className = "compact-card-count";
+      badge.textContent = count;
+      card.querySelector(".compact-card-name").appendChild(badge);
+    }
+    const selectBtn = card.querySelector(".compact-card-select");
+    const aboutBtn = card.querySelector(".compact-card-about");
+    if (!e.available) {
+      wrapper.classList.add("compact-card-unavailable");
+      selectBtn.disabled = true;
+      aboutBtn.disabled = true;
+    } else if (isSelected) {
+      selectBtn.textContent = "Selected ✓";
+      selectBtn.classList.add("compact-card-select--active");
+      selectBtn.disabled = true;
+    }
+    selectBtn.addEventListener("click", () => {
+      if (!e.available || isSelected) return;
+      state.editorKey = e.key;
+      render();
+    });
+    aboutBtn.addEventListener("click", () => showEditorInfo(e));
+    return card;
+  }
+
+  function renderEditingPanel() {
+    let panel = document.getElementById("editor-float-panel");
+    if (!panel) {
+      panel = document.createElement("div");
+      panel.id = "editor-float-panel";
+      panel.className = "editor-float-panel editor-float-panel--editing";
+      if (state.panelPos) {
+        panel.style.left = state.panelPos.left + "px";
+        panel.style.top = state.panelPos.top + "px";
+        panel.style.right = "auto";
+      }
+      document.body.appendChild(panel);
+    } else {
+      panel.className = "editor-float-panel editor-float-panel--editing";
+      if (panel._dragCleanup) { panel._dragCleanup(); panel._dragCleanup = null; }
+    }
+    panel.innerHTML = "";
+
+    // Drag handle
+    const handle = document.createElement("div");
+    handle.className = "efp-handle";
+    const grip = document.createElement("span");
+    grip.className = "efp-grip";
+    grip.textContent = "⠿";
+    handle.appendChild(grip);
+    if (state.isRunning) {
+      const editorName = document.createElement("span");
+      editorName.className = "efp-title";
+      editorName.textContent = editorByKey(state.runningEditor)?.name || "";
+      handle.appendChild(editorName);
+    } else {
+      const editor = editorByKey(state.editorKey);
+      const runBtn = document.createElement("button");
+      runBtn.className = "btn-primary efp-run-btn";
+      runBtn.disabled = !state.essay || !editor;
+      runBtn.textContent = state.phase === "reviewing"
+        ? `Run ${editor?.name || ""} again`
+        : `Run ${editor?.name || "editor"}`;
+      runBtn.addEventListener("click", () => runPass());
+      handle.appendChild(runBtn);
+    }
+    panel.appendChild(handle);
+    setupPanelDrag(panel, handle);
+
+    // Error
+    if (state.error) {
+      const err = document.createElement("div");
+      err.className = "efp-error";
+      err.textContent = state.error;
+      panel.appendChild(err);
+    }
+
+    if (state.isRunning) {
+      // Running: active card + verb animation
+      const runSection = document.createElement("div");
+      runSection.className = "efp-body efp-running-section";
+      const activeEditor = editors.find((e) => e.key === state.runningEditor);
+      if (activeEditor) runSection.appendChild(buildCompactCard(activeEditor));
+      const verb = document.createElement("div");
+      verb.id = "running-banner-body";
+      verb.className = "running-banner-body efp-verb";
+      verb.textContent = "Reading your essay…";
+      runSection.appendChild(verb);
+      panel.appendChild(runSection);
+    } else {
+      const body = document.createElement("div");
+      body.className = "efp-body";
+
+      // Collapsible editor cards
+      const editorSection = document.createElement("div");
+      editorSection.className = "efp-section";
+      const pickerHeader = collapsibleHeader(
+        state.pickerCollapsed ? "Show editors" : "Hide editors",
+        state.pickerCollapsed,
+        () => { state.pickerCollapsed = !state.pickerCollapsed; render(); }
+      );
+      pickerHeader.classList.add("efp-section-header");
+      editorSection.appendChild(pickerHeader);
+      if (!state.pickerCollapsed) {
+        const cardList = document.createElement("div");
+        cardList.className = "efp-card-list";
+        editors.forEach((e) => cardList.appendChild(buildCompactCard(e)));
+        editorSection.appendChild(cardList);
+      }
+      body.appendChild(editorSection);
+
+      // Pass history
+      if (state.passHistory.length > 0) {
+        const histEl = document.createElement("div");
+        histEl.className = "efp-section";
+        renderPassHistory(histEl);
+        body.appendChild(histEl);
+      }
+
+      // Verdict
+      if (state.phase === "reviewing" && state.verdict) {
+        const vd = document.createElement("div");
+        vd.className = "efp-section efp-verdict";
+        vd.innerHTML = `<div class="mono-label efp-verdict-label">Verdict</div><div class="efp-verdict-text">${state.verdict}</div>`;
+        body.appendChild(vd);
+      }
+
+      // All resolved notice
+      if (state.phase === "reviewing") {
+        const pending = pendingRevisions();
+        if (state.revisions.length > 0 && pending.length === 0) {
+          const accepted = state.revisions.filter((r) => r.status === "accepted").length;
+          const declined = state.revisions.filter((r) => r.status === "declined").length;
+          const ar = document.createElement("div");
+          ar.className = "efp-section efp-all-resolved";
+          ar.innerHTML = `<span class="mono-label">Pass complete · </span><span class="efp-resolved-text">${accepted} accepted, ${declined} declined.</span>`;
+          body.appendChild(ar);
+        }
+      }
+
+      panel.appendChild(body);
+
+      // Footer: status + action buttons
+      const footer = document.createElement("div");
+      footer.className = "efp-status-footer";
+      if (state.phase === "reviewing" && state.appliedEditor) {
+        const e = editorByKey(state.appliedEditor);
+        const pendingCount = pendingRevisions().length;
+        const accepted = state.revisions.filter((r) => r.status === "accepted").length;
+        const declined = state.revisions.filter((r) => r.status === "declined").length;
+        const counts = document.createElement("div");
+        counts.className = "efp-counts mono-label";
+        counts.innerHTML = `<span class="editor-badge">${e?.name || ""}</span> ${pendingCount} pending · ${accepted} accepted · ${declined} declined`;
+        footer.appendChild(counts);
+      } else if (state.phase === "reading") {
+        const hint = document.createElement("div");
+        hint.className = "efp-hint mono-label";
+        hint.textContent = "Select an editor and run a pass";
+        footer.appendChild(hint);
+      }
+      const actions = document.createElement("div");
+      actions.className = "efp-footer-actions";
+      if (state.phase === "reviewing" && !state.isEditingEssay) {
+        const editBtn = document.createElement("button");
+        editBtn.className = "btn-ghost efp-sm-btn";
+        editBtn.textContent = "Edit text";
+        editBtn.addEventListener("click", startEssayEdit);
+        actions.appendChild(editBtn);
+      }
+      if (state.isEditingEssay) {
+        const hint = document.createElement("span");
+        hint.className = "efp-hint mono-label";
+        hint.textContent = "Editing…";
+        actions.appendChild(hint);
+      }
+      if (state.phase === "reviewing") {
+        const copyBtn = document.createElement("button");
+        copyBtn.className = "btn-ghost efp-sm-btn";
+        copyBtn.textContent = state.copyToast ? "Copied ✓" : "Copy essay";
+        copyBtn.addEventListener("click", copyEssay);
+        actions.appendChild(copyBtn);
+      }
+      footer.appendChild(actions);
+      panel.appendChild(footer);
+    }
   }
 
   function renderReadingOrReviewingPhase() {
+    clearInterval(phraseIntervalId);
+    phraseIntervalId = null;
     const main = document.getElementById("main");
     main.innerHTML = "";
     const tpl = document.getElementById("tpl-reading-phase").content.cloneNode(true);
 
-    // Editor picker
-    tpl.getElementById("picker-label").textContent =
-      state.phase === "reviewing" ? "Switch editor for next pass" : "Pick an editor";
-    const compactGrid = tpl.getElementById("editor-compact-cards");
-    editors.forEach((e) => {
-      const card = document.getElementById("tpl-editor-compact-card").content.cloneNode(true);
-      const wrapper = card.querySelector(".compact-card");
-      const isSelected = state.editorKey === e.key;
-      wrapper.classList.toggle("compact-card-active", isSelected);
-      wrapper.classList.toggle("disabled", !e.available);
-      wrapper.tabIndex = e.available ? 0 : -1;
-      wrapper.setAttribute("aria-pressed", String(isSelected));
-      card.querySelector(".compact-card-name").textContent = e.name;
-      card.querySelector(".compact-card-author").textContent = e.author;
-      card.querySelector(".compact-card-usecase").textContent = e.useCase;
-      card.querySelector(".info-button").addEventListener("click", (ev) => {
-        ev.stopPropagation();
-        showEditorInfo(e);
-      });
-      wrapper.addEventListener("click", () => {
-        if (!e.available) return;
-        state.editorKey = e.key;
-        render();
-        showEditorInfo(e);
-      });
-      wrapper.addEventListener("keydown", (ev) => {
-        if (e.available && (ev.key === "Enter" || ev.key === " ")) {
-          ev.preventDefault();
-          state.editorKey = e.key;
-          render();
-        }
-      });
-      compactGrid.appendChild(card);
-    });
-
-    // Running banner
-    if (state.isRunning) {
-      tpl.getElementById("running-banner").hidden = false;
-      tpl.getElementById("running-banner-title").textContent =
-        `${editorByKey(state.runningEditor)?.name || "Editor"} is reading`;
-    }
-
-    // Status bar
-    const statusLeft = tpl.getElementById("status-left");
-    if (state.phase === "reading") {
-      statusLeft.innerHTML = `<span class="mono-label">Ready · pick an editor and run a pass</span>`;
-    } else if (state.phase === "reviewing" && state.appliedEditor) {
-      const e = editorByKey(state.appliedEditor);
-      const pendingCount = pendingRevisions().length;
-      const accepted = state.revisions.filter((r) => r.status === "accepted").length;
-      const declined = state.revisions.filter((r) => r.status === "declined").length;
-      statusLeft.innerHTML = `<span class="editor-badge">${e?.name || ""}</span><span class="mono-label">${pendingCount} pending · ${accepted} accepted · ${declined} declined</span>`;
-    }
-    if (state.phase === "reviewing") {
-      const copyBtn = tpl.getElementById("copy-essay-btn");
-      copyBtn.hidden = false;
-      copyBtn.textContent = state.copyToast ? "Copied" : "Copy essay";
-      copyBtn.addEventListener("click", copyEssay);
-    }
-    const editTextBtn = document.createElement("button");
-    editTextBtn.className = "btn-ghost";
-    editTextBtn.textContent = state.isEditingEssay ? "Editing…" : "Edit text";
-    editTextBtn.disabled = state.isRunning || state.isEditingEssay;
-    editTextBtn.addEventListener("click", startEssayEdit);
-    tpl.getElementById("status-left").after(editTextBtn);
-
-    // Error
-    if (state.error) {
-      const box = tpl.getElementById("error-box");
-      box.hidden = false;
-      box.textContent = state.error;
-    }
-
-    // Verdict
-    if (state.phase === "reviewing" && state.verdict) {
-      tpl.getElementById("verdict-card").hidden = false;
-      tpl.getElementById("verdict-text").textContent = state.verdict;
-    }
-
-    // All resolved
-    const pending = pendingRevisions();
-    const allResolved = state.revisions.length > 0 && pending.length === 0;
-    if (state.phase === "reviewing" && allResolved) {
-      const accepted = state.revisions.filter((r) => r.status === "accepted").length;
-      const declined = state.revisions.filter((r) => r.status === "declined").length;
-      tpl.getElementById("all-resolved-banner").hidden = false;
-      tpl.getElementById("all-resolved-text").textContent =
-        `All revisions reviewed. ${accepted} accepted, ${declined} declined. You can run another pass with the same or a different editor.`;
-    }
-
-    // Essay body
+    // Essay workspace inside the document sheet
     const article = tpl.getElementById("essay-prose");
-    if (state.isEditingEssay) {
+    const workspace = document.createElement("div");
+    workspace.className = "essay-workspace";
+    article.replaceWith(workspace);
+
+    if (state.phase === "reading") {
+      const toolbar = buildMarkdownToolbar();
+      workspace.appendChild(toolbar);
       const ta = document.createElement("textarea");
-      ta.className = "essay-edit-textarea";
+      ta.className = "essay-editor";
+      ta.value = state.essay;
+      ta.disabled = state.isRunning;
+      ta.placeholder = "Paste your essay here.";
+      ta.addEventListener("input", () => {
+        state.essay = ta.value;
+        ta.style.height = "auto";
+        ta.style.height = ta.scrollHeight + "px";
+      });
+      workspace.appendChild(ta);
+      wireToolbar(toolbar, ta);
+      setTimeout(() => { ta.style.height = ta.scrollHeight + "px"; }, 0);
+    } else if (state.isEditingEssay) {
+      const toolbar = buildMarkdownToolbar();
+      workspace.appendChild(toolbar);
+      const ta = document.createElement("textarea");
+      ta.className = "essay-editor";
       ta.value = state.essayEditValue;
-      ta.addEventListener("input", (e) => { state.essayEditValue = e.target.value; });
+      ta.addEventListener("input", (ev) => { state.essayEditValue = ev.target.value; });
       const bar = document.createElement("div");
       bar.className = "essay-edit-bar";
       bar.appendChild(button("btn-primary", "Save", saveEssayEdit));
       bar.appendChild(button("btn-ghost", "Cancel", cancelEssayEdit));
-      article.appendChild(ta);
-      article.appendChild(bar);
+      workspace.appendChild(ta);
+      workspace.appendChild(bar);
+      wireToolbar(toolbar, ta);
       setTimeout(() => ta.focus(), 0);
-    } else if (state.phase === "reading") {
-      article.innerHTML = marked.parse(state.essay);
-      article.classList.add("essay-prose--rendered");
     } else {
-      renderEssaySegments(article);
+      const prose = document.createElement("article");
+      prose.className = "essay-prose";
+      workspace.appendChild(prose);
+      renderEssaySegments(prose);
     }
 
     main.appendChild(tpl);
+    renderEditingPanel();
 
-    if (state.activeId && segmentRefs[state.activeId]) {
+    if (state.isRunning) startRunningAnimation(state.runningEditor);
+
+    if (state.activeId && segmentRefs[state.activeId] && state.activeId !== state._lastScrolledId) {
+      state._lastScrolledId = state.activeId;
       const el = segmentRefs[state.activeId];
       const rect = el.getBoundingClientRect();
       const inView = rect.top >= 100 && rect.bottom <= window.innerHeight - 100;
@@ -788,7 +1373,7 @@ function initEssayApp() {
 
   function showEditorInfo(e) {
     document.getElementById("editor-info-name").textContent = e.name;
-    document.getElementById("editor-info-byline").textContent = `${e.author} · ${e.source}`;
+    document.getElementById("editor-info-byline").textContent = `${authorDisplay(e)} · ${e.source}`;
     document.getElementById("editor-info-lead").textContent = e.lead || e.focus;
     document.getElementById("editor-info-readmore").href = `/editors/${e.key}`;
     document.getElementById("editor-info-modal").hidden = false;

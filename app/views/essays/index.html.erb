@@ -24,26 +24,8 @@
 
 <template id="tpl-input-phase">
   <main class="phase-input">
-    <div class="intro">
-      <h1>Write fast, edit slowly.</h1>
-      <div class="subhead">Human-speed editing for the age of AI.</div>
-      <p>Most AI editing leaves you feeling like you've been through a washing machine. Twenty changes at once, everything blurred together, and at the end you can't quite tell what's still yours.</p>
-      <p>This works the other way. One editor at a time. One revision at a time. The whole essay stays in front of you. You see exactly what each suggestion would change. Then you accept it, decline it, or rewrite it yourself.</p>
-    </div>
-
-    <textarea id="paste-input" placeholder="Paste your essay here…"></textarea>
-
-    <div class="input-actions">
-      <button class="btn-ghost" id="load-demo-btn">Load demo essay</button>
-      <button class="btn-primary" id="continue-btn" disabled>Continue →</button>
-    </div>
-
-    <div class="editors-section">
-      <div class="mono-label">
-        <span>Editors</span>
-        <span class="mono-sublabel">· click any editor to read about its philosophy and principles</span>
-      </div>
-      <div class="editors-grid" id="editor-cards"></div>
+    <div class="document-sheet">
+      <textarea id="paste-input" placeholder="Paste your essay here."></textarea>
     </div>
   </main>
 </template>
@@ -59,46 +41,23 @@
 
 <template id="tpl-reading-phase">
   <main class="phase-reading">
-    <div class="editor-picker">
-      <div class="mono-label" id="picker-label">Pick an editor</div>
-      <div class="editor-compact-grid" id="editor-compact-cards"></div>
+    <div class="document-sheet document-sheet--editing">
+      <article class="essay-prose" id="essay-prose"></article>
     </div>
-
-    <div class="running-banner" id="running-banner" hidden>
-      <span class="reading-dot"></span>
-      <div>
-        <div class="running-banner-title" id="running-banner-title">Editor is reading</div>
-        <div class="running-banner-body">Going through your essay one paragraph at a time. This usually takes ten to twenty seconds.</div>
-      </div>
-    </div>
-
-    <div class="status-bar">
-      <div class="status-left" id="status-left"></div>
-      <button class="btn-ghost" id="copy-essay-btn" hidden>Copy essay</button>
-    </div>
-
-    <div class="error-box" id="error-box" hidden></div>
-
-    <div class="verdict-card" id="verdict-card" hidden>
-      <div class="mono-label">Verdict</div>
-      <div class="verdict-text" id="verdict-text"></div>
-    </div>
-
-    <div class="all-resolved-banner" id="all-resolved-banner" hidden>
-      <div class="mono-label">Pass complete</div>
-      <div id="all-resolved-text"></div>
-    </div>
-
-    <article class="essay-prose" id="essay-prose"></article>
   </main>
 </template>
 
 <template id="tpl-editor-compact-card">
-  <div class="compact-card" tabindex="0" role="button">
-    <button type="button" class="info-button">?</button>
-    <div class="compact-card-name"></div>
-    <div class="compact-card-author"></div>
-    <div class="compact-card-usecase"></div>
+  <div class="compact-card">
+    <div class="compact-card-body">
+      <div class="compact-card-name"></div>
+      <div class="compact-card-author"></div>
+      <div class="compact-card-usecase"></div>
+    </div>
+    <div class="compact-card-footer">
+      <button type="button" class="compact-card-btn compact-card-select">Select</button>
+      <button type="button" class="compact-card-btn compact-card-about">About</button>
+    </div>
   </div>
 </template>
 
