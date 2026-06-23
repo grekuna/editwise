@@ -371,29 +371,67 @@ textarea, select, input, button { font-family: inherit; }
 .efp-footer-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .efp-sm-btn { font-size: 11px; padding: 4px 10px; }
 
-/* Editor filter bar */
+/* Editor filter — vertical nav list */
 .efp-filter-bar {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  padding: 8px 10px;
+  flex-direction: column;
+  padding: 6px 0 2px;
+  border-bottom: 1px solid var(--border);
 }
-.efp-filter-btn {
-  padding: 3px 8px;
+.efp-filter-heading {
   font-family: 'JetBrains Mono', monospace;
   font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mono-grey-light);
+  padding: 4px 13px 6px;
+}
+.efp-filter-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 5px 13px 5px 15px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  background: transparent;
+  border: none;
+  border-left: 2px solid transparent;
+  color: var(--mono-grey);
+  cursor: pointer;
+  transition: color 100ms ease, border-color 100ms ease;
+}
+.efp-filter-btn:hover { color: var(--ink); }
+.efp-filter-btn--active {
+  color: var(--ink);
+  font-weight: 600;
+  border-left-color: var(--accent);
+}
+
+/* Document action bar — bottom of the white essay card */
+.doc-action-bar {
+  display: flex;
+  gap: 8px;
+  padding: 14px 52px 28px;
+  border-top: 1px solid var(--border);
+}
+.doc-action-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   background: transparent;
   border: 1px solid var(--border-strong);
   color: var(--mono-grey);
+  padding: 5px 12px;
   border-radius: 2px;
   cursor: pointer;
-  transition: all 100ms ease;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 }
-.efp-filter-btn:hover { border-color: var(--ink); color: var(--ink); }
-.efp-filter-btn--active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.doc-action-btn:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 
 /* Editorial header — sits above the essay in the document sheet */
 .doc-editorial-header {

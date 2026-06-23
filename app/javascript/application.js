@@ -991,14 +991,18 @@ function initEssayApp() {
 
       // Filter bar
       const FILTERS = [
-        { value: "all",               label: "All" },
+        { value: "all",               label: "All editors" },
         { value: "core_editorial",    label: "Core editorial" },
         { value: "extended_editorial",label: "Extended editorial" },
         { value: "core_academic",     label: "Core academic" },
         { value: "extended_academic", label: "Extended academic" },
       ];
       const filterBar = document.createElement("div");
-      filterBar.className = "efp-filter-bar efp-section";
+      filterBar.className = "efp-filter-bar";
+      const filterHeading = document.createElement("div");
+      filterHeading.className = "efp-filter-heading";
+      filterHeading.textContent = "Filter by focus";
+      filterBar.appendChild(filterHeading);
       FILTERS.forEach(({ value, label }) => {
         const btn = document.createElement("button");
         btn.className = "efp-filter-btn" + (state.editorFilter === value ? " efp-filter-btn--active" : "");
@@ -1068,40 +1072,6 @@ function initEssayApp() {
       }
 
       panel.appendChild(body);
-
-      // Footer: action buttons only (status lives in the document header)
-      const footer = document.createElement("div");
-      footer.className = "efp-status-footer";
-      if (state.phase === "reading") {
-        const hint = document.createElement("div");
-        hint.className = "efp-hint mono-label";
-        hint.textContent = "Select an editor and run a pass";
-        footer.appendChild(hint);
-      }
-      const actions = document.createElement("div");
-      actions.className = "efp-footer-actions";
-      if (!state.isEditingEssay && !state.isRunning) {
-        const editBtn = document.createElement("button");
-        editBtn.className = "btn-ghost efp-sm-btn";
-        editBtn.textContent = "Edit text";
-        editBtn.addEventListener("click", startEssayEdit);
-        actions.appendChild(editBtn);
-      }
-      if (state.isEditingEssay) {
-        const hint = document.createElement("span");
-        hint.className = "efp-hint mono-label";
-        hint.textContent = "Editing…";
-        actions.appendChild(hint);
-      }
-      if (state.phase === "reviewing") {
-        const copyBtn = document.createElement("button");
-        copyBtn.className = "btn-ghost efp-sm-btn";
-        copyBtn.textContent = state.copyToast ? "Copied ✓" : "Copy essay";
-        copyBtn.addEventListener("click", copyEssay);
-        actions.appendChild(copyBtn);
-      }
-      footer.appendChild(actions);
-      panel.appendChild(footer);
     }
   }
 
@@ -1201,6 +1171,25 @@ function initEssayApp() {
       prose.className = "essay-prose";
       workspace.appendChild(prose);
       renderEssaySegments(prose);
+    }
+
+    // Document action bar: Edit text + Copy essay, bottom of the white card
+    if (!state.isEditingEssay && !state.isRunning) {
+      const docActions = document.createElement("div");
+      docActions.className = "doc-action-bar";
+      const editBtn = document.createElement("button");
+      editBtn.className = "doc-action-btn";
+      editBtn.textContent = "Edit text";
+      editBtn.addEventListener("click", startEssayEdit);
+      docActions.appendChild(editBtn);
+      if (state.phase === "reviewing") {
+        const copyBtn = document.createElement("button");
+        copyBtn.className = "doc-action-btn";
+        copyBtn.textContent = state.copyToast ? "Copied ✓" : "Copy essay";
+        copyBtn.addEventListener("click", copyEssay);
+        docActions.appendChild(copyBtn);
+      }
+      sheet.appendChild(docActions);
     }
 
     main.appendChild(tpl);
