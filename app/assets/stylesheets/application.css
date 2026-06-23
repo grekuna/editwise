@@ -410,12 +410,18 @@ textarea, select, input, button { font-family: inherit; }
   border-left-color: var(--accent);
 }
 
-/* Document action bar — bottom of the white essay card */
+/* Document action bar — sticky just above the essay text */
 .doc-action-bar {
+  position: sticky;
+  top: 48px;
   display: flex;
+  justify-content: flex-end;
   gap: 8px;
-  padding: 14px 52px 28px;
-  border-top: 1px solid var(--border);
+  padding: 8px 52px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--border);
+  z-index: 20;
 }
 .doc-action-btn {
   font-family: 'JetBrains Mono', monospace;

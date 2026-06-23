@@ -1190,7 +1190,7 @@ function initEssayApp() {
         copyBtn.addEventListener("click", copyEssay);
         docActions.appendChild(copyBtn);
       }
-      sheet.appendChild(docActions);
+      sheet.insertBefore(docActions, workspace);
     }
 
     main.appendChild(tpl);
