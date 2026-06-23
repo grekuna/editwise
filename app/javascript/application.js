@@ -1008,17 +1008,14 @@ function initEssayApp() {
       });
       body.appendChild(filterBar);
 
-      // Collapsible editor list
+      // Editor list with label
       const editorSection = document.createElement("div");
       editorSection.className = "efp-section";
-      const pickerHeader = collapsibleHeader(
-        state.pickerCollapsed ? "Show editors" : "Hide editors",
-        state.pickerCollapsed,
-        () => { state.pickerCollapsed = !state.pickerCollapsed; render(); }
-      );
-      pickerHeader.classList.add("efp-section-header");
-      editorSection.appendChild(pickerHeader);
-      if (!state.pickerCollapsed) {
+      const editorLabel = document.createElement("div");
+      editorLabel.className = "efp-section-label";
+      editorLabel.textContent = "Select an editor and run a pass";
+      editorSection.appendChild(editorLabel);
+      {
         const visibleEditors = state.editorFilter === "all"
           ? editors
           : editors.filter((e) => e.category === state.editorFilter);

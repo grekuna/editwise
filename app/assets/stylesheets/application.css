@@ -340,6 +340,16 @@ textarea, select, input, button { font-family: inherit; }
 .efp-section { border-bottom: 1px solid var(--border); }
 .efp-section-header { margin-bottom: 0; padding: 8px 13px; }
 .efp-section-header .mono-label { font-size: 9px; }
+.efp-section-label {
+  padding: 9px 13px 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mono-grey-light);
+  border-bottom: 1px solid var(--border);
+}
 .efp-card-list { padding: 8px; display: flex; flex-direction: column; gap: 6px; }
 .efp-running-section { padding: 12px; }
 .efp-verb {
@@ -854,3 +864,63 @@ textarea, select, input, button { font-family: inherit; }
 .report-prose li { margin-bottom: 0.5em; }
 .report-prose strong { font-weight: 600; color: var(--ink); }
 .report-prose em { font-style: italic; }
+
+/* ---- How it works page ---- */
+.how-page { min-height: 100vh; background: #E4DED5; }
+.how-header {
+  position: sticky; top: 0; z-index: 50;
+  background: rgba(255,255,255,0.92); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+.logo-link { text-decoration: none; color: inherit; display: flex; align-items: baseline; gap: 8px; }
+.header-how-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mono-grey);
+  text-decoration: none;
+  padding: 6px 0;
+  transition: color 120ms ease;
+}
+.header-how-link:hover { color: var(--ink); }
+.how-main { padding: 52px 32px 80px; display: flex; justify-content: center; }
+.how-doc { width: 100%; max-width: 680px; }
+.how-title {
+  font-size: 38px; font-weight: 500; line-height: 1.12;
+  letter-spacing: -0.015em; margin: 0 0 28px;
+}
+.how-intro { margin-bottom: 52px; }
+.how-intro p { font-size: 18px; line-height: 1.72; color: var(--ink-soft); margin: 0 0 18px; }
+.how-lead { font-size: 20px !important; color: var(--ink) !important; }
+.how-cta {
+  display: inline-block; margin-top: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #fff; background: var(--ink); border: 1px solid var(--ink);
+  padding: 10px 20px; border-radius: 2px; text-decoration: none;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.how-cta:hover { background: var(--accent); border-color: var(--accent); }
+.how-section { margin-bottom: 52px; }
+.how-section-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--mono-grey);
+  margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--border-strong);
+}
+.how-section p { font-size: 17px; line-height: 1.72; color: var(--ink-soft); margin: 0 0 16px; }
+.how-steps { font-size: 17px; line-height: 1.72; color: var(--ink-soft); padding-left: 1.4em; margin: 0; }
+.how-steps li { margin-bottom: 12px; }
+.how-steps strong { color: var(--ink); font-weight: 500; }
+.how-team-intro { margin-bottom: 28px !important; }
+.how-editor-list { margin: 0 0 24px; border-top: 1px solid var(--border); }
+.how-editor-row {
+  display: flex; align-items: baseline; gap: 24px;
+  padding: 14px 0; border-bottom: 1px solid var(--border);
+}
+.how-editor-meta { flex-shrink: 0; width: 210px; }
+.how-editor-name { font-size: 15px; font-weight: 500; display: block; margin-bottom: 2px; }
+.how-editor-source { font-size: 11px; color: var(--mono-grey-light); font-style: italic; }
+.how-editor-focus { font-size: 14px; line-height: 1.5; color: var(--ink-soft); flex: 1; }
+.how-team-note { font-style: italic; }
+.how-footer { margin-top: 60px; padding-top: 32px; border-top: 1px solid var(--border-strong); }
