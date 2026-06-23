@@ -731,6 +731,9 @@ function initEssayApp() {
         <div class="efp-item-sub">${authorDisplay(e)} · <em>${e.source}</em></div>`;
       if (e.available) {
         item.addEventListener("click", () => { state.editorKey = e.key; render(); });
+        let hoverTimer = null;
+        item.addEventListener("mouseenter", () => { hoverTimer = setTimeout(() => showEditorInfo(e), 600); });
+        item.addEventListener("mouseleave", () => { clearTimeout(hoverTimer); hoverTimer = null; });
       }
       list.appendChild(item);
     });
@@ -971,11 +974,17 @@ function initEssayApp() {
     }
 
     if (state.isRunning) {
-      // Running: active card + verb animation
+      // Running: active item + verb animation
       const runSection = document.createElement("div");
       runSection.className = "efp-body efp-running-section";
       const activeEditor = editors.find((e) => e.key === state.runningEditor);
-      if (activeEditor) runSection.appendChild(buildCompactCard(activeEditor));
+      if (activeEditor) {
+        const activeItem = document.createElement("div");
+        activeItem.className = "efp-item efp-item--selected";
+        activeItem.innerHTML = `<div class="efp-item-name">${activeEditor.name}</div>
+          <div class="efp-item-sub">${authorDisplay(activeEditor)} · <em>${activeEditor.source}</em></div>`;
+        runSection.appendChild(activeItem);
+      }
       const verb = document.createElement("div");
       verb.id = "running-banner-body";
       verb.className = "running-banner-body efp-verb";
@@ -986,7 +995,7 @@ function initEssayApp() {
       const body = document.createElement("div");
       body.className = "efp-body";
 
-      // Collapsible editor cards
+      // Collapsible editor list (compact, same style as landing panel)
       const editorSection = document.createElement("div");
       editorSection.className = "efp-section";
       const pickerHeader = collapsibleHeader(
@@ -997,10 +1006,27 @@ function initEssayApp() {
       pickerHeader.classList.add("efp-section-header");
       editorSection.appendChild(pickerHeader);
       if (!state.pickerCollapsed) {
-        const cardList = document.createElement("div");
-        cardList.className = "efp-card-list";
-        editors.forEach((e) => cardList.appendChild(buildCompactCard(e)));
-        editorSection.appendChild(cardList);
+        const itemList = document.createElement("div");
+        itemList.className = "efp-list";
+        editors.forEach((e) => {
+          const item = document.createElement("div");
+          const sel = state.editorKey === e.key;
+          const count = state.passCounts[e.key] || 0;
+          const countHtml = count > 0 ? ` <span class="efp-item-count">${count}×</span>` : "";
+          item.className = "efp-item" +
+            (sel ? " efp-item--selected" : "") +
+            (!e.available ? " efp-item--unavailable" : "");
+          item.innerHTML = `<div class="efp-item-name">${e.name}${countHtml}</div>
+            <div class="efp-item-sub">${authorDisplay(e)} · <em>${e.source}</em></div>`;
+          if (e.available) {
+            item.addEventListener("click", () => { state.editorKey = e.key; render(); });
+            let hoverTimer = null;
+            item.addEventListener("mouseenter", () => { hoverTimer = setTimeout(() => showEditorInfo(e), 600); });
+            item.addEventListener("mouseleave", () => { clearTimeout(hoverTimer); hoverTimer = null; });
+          }
+          itemList.appendChild(item);
+        });
+        editorSection.appendChild(itemList);
       }
       body.appendChild(editorSection);
 
@@ -1094,8 +1120,6 @@ function initEssayApp() {
     article.replaceWith(workspace);
 
     if (state.phase === "reading") {
-      const toolbar = buildMarkdownToolbar();
-      workspace.appendChild(toolbar);
       const ta = document.createElement("textarea");
       ta.className = "essay-editor";
       ta.value = state.essay;
@@ -1107,11 +1131,8 @@ function initEssayApp() {
         ta.style.height = ta.scrollHeight + "px";
       });
       workspace.appendChild(ta);
-      wireToolbar(toolbar, ta);
       setTimeout(() => { ta.style.height = ta.scrollHeight + "px"; }, 0);
     } else if (state.isEditingEssay) {
-      const toolbar = buildMarkdownToolbar();
-      workspace.appendChild(toolbar);
       const ta = document.createElement("textarea");
       ta.className = "essay-editor";
       ta.value = state.essayEditValue;
@@ -1122,7 +1143,6 @@ function initEssayApp() {
       bar.appendChild(button("btn-ghost", "Cancel", cancelEssayEdit));
       workspace.appendChild(ta);
       workspace.appendChild(bar);
-      wireToolbar(toolbar, ta);
       setTimeout(() => ta.focus(), 0);
     } else {
       const prose = document.createElement("article");

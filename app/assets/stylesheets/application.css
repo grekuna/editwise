@@ -247,8 +247,9 @@ textarea, select, input, button { font-family: inherit; }
 .efp-item:hover:not(.efp-item--unavailable) { background: var(--cream); }
 .efp-item--selected { border-left-color: var(--accent); background: rgba(184,69,31,0.04); }
 .efp-item--unavailable { opacity: 0.4; cursor: not-allowed; }
-.efp-item-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; }
+.efp-item-name { font-size: 14px; font-weight: 500; margin-bottom: 2px; display: flex; align-items: baseline; gap: 6px; }
 .efp-item-sub { font-size: 11px; font-style: italic; color: var(--mono-grey-light); }
+.efp-item-count { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 600; color: var(--accent); letter-spacing: 0.04em; }
 .efp-footer {
   display: flex;
   gap: 8px;
