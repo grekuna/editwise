@@ -619,6 +619,23 @@ function initEssayApp() {
       prose.className = "report-prose";
       prose.innerHTML = marked.parse(state.report);
       wrap.appendChild(prose);
+
+      // Final essay at the end
+      const essaySeparator = document.createElement("div");
+      essaySeparator.className = "report-essay-sep";
+      const essayLabel = document.createElement("div");
+      essayLabel.className = "report-essay-label";
+      essayLabel.textContent = "Your revised essay";
+      essaySeparator.appendChild(essayLabel);
+      wrap.appendChild(essaySeparator);
+
+      const essayDoc = document.createElement("div");
+      essayDoc.className = "report-essay-doc";
+      const essayProse = document.createElement("div");
+      essayProse.className = "report-essay-prose";
+      essayProse.innerHTML = marked.parse(state.essay);
+      essayDoc.appendChild(essayProse);
+      wrap.appendChild(essayDoc);
     }
 
     main.appendChild(wrap);

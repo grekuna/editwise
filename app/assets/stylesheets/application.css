@@ -909,6 +909,34 @@ textarea, select, input, button { font-family: inherit; }
 .report-prose strong { font-weight: 600; color: var(--ink); }
 .report-prose em { font-style: italic; }
 
+/* Report — revised essay at the end */
+.report-essay-sep {
+  margin-top: 60px;
+  padding-top: 24px;
+  border-top: 2px solid var(--border-strong);
+}
+.report-essay-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mono-grey);
+  margin-bottom: 28px;
+}
+.report-essay-doc {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(31,27,22,0.05);
+  padding: 48px 52px 60px;
+  margin-bottom: 60px;
+}
+.report-essay-prose { font-size: 18px; line-height: 1.78; color: var(--ink); }
+.report-essay-prose p { margin: 0 0 1.4em; }
+.report-essay-prose h1, .report-essay-prose h2, .report-essay-prose h3 { margin: 1.5em 0 0.6em; }
+.report-essay-prose strong { font-weight: 600; }
+.report-essay-prose em { font-style: italic; }
+
 /* ---- How it works page ---- */
 .how-page { min-height: 100vh; background: #E4DED5; }
 .how-header {
