@@ -813,13 +813,14 @@ function initEssayApp() {
       name.className = "history-editor-name";
       name.textContent = pass.editorName;
 
+      const pending = pass.revisions.length - accepted - declined;
       const stats = document.createElement("span");
       stats.className = "history-stats";
-      const parts = [];
-      if (accepted > 0) parts.push(`${accepted} accepted`);
-      if (declined > 0) parts.push(`${declined} declined`);
-      if (parts.length === 0) parts.push("no revisions");
-      stats.textContent = parts.join(" · ");
+      if (pass.revisions.length === 0) {
+        stats.textContent = "no revisions";
+      } else {
+        stats.textContent = `${accepted} accepted · ${declined} declined · ${pending} pending`;
+      }
 
       const time = document.createElement("span");
       time.className = "history-time";
