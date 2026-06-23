@@ -250,10 +250,8 @@ textarea, select, input, button { font-family: inherit; }
   color: var(--mono-grey);
   border-radius: 2px;
   cursor: pointer;
-  opacity: 0;
-  transition: opacity 120ms ease, background 120ms ease, color 120ms ease;
+  transition: background 120ms ease, color 120ms ease;
 }
-.efp-item:hover .efp-item-run { opacity: 1; }
 .efp-item-run:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
 
 .efp-item {

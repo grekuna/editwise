@@ -954,16 +954,6 @@ function initEssayApp() {
       editorName.className = "efp-title";
       editorName.textContent = editorByKey(state.runningEditor)?.name || "";
       handle.appendChild(editorName);
-    } else {
-      const editor = editorByKey(state.editorKey);
-      const runBtn = document.createElement("button");
-      runBtn.className = "btn-primary efp-run-btn";
-      runBtn.disabled = !state.essay || !editor;
-      runBtn.textContent = state.phase === "reviewing"
-        ? `Run ${editor?.name || ""} again`
-        : `Run ${editor?.name || "editor"}`;
-      runBtn.addEventListener("click", () => runPass());
-      handle.appendChild(runBtn);
     }
     panel.appendChild(handle);
     setupPanelDrag(panel, handle);
