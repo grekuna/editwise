@@ -776,6 +776,10 @@ function initEssayApp() {
     const body = document.createElement("div");
     body.className = "efp-body";
     body.appendChild(buildFilterBar());
+    const pickHeading = document.createElement("div");
+    pickHeading.className = "efp-filter-heading";
+    pickHeading.textContent = "Pick an editor";
+    body.appendChild(pickHeading);
     const list = document.createElement("div");
     list.className = "efp-list";
     filteredEditors(state.editorFilter).forEach((e) => {
@@ -1052,8 +1056,8 @@ function initEssayApp() {
       const editorSection = document.createElement("div");
       editorSection.className = "efp-section";
       const editorLabel = document.createElement("div");
-      editorLabel.className = "efp-section-label";
-      editorLabel.textContent = "Select an editor and run a pass";
+      editorLabel.className = "efp-filter-heading";
+      editorLabel.textContent = "Pick an editor";
       editorSection.appendChild(editorLabel);
       {
         const visibleEditors = filteredEditors(state.editorFilter);
