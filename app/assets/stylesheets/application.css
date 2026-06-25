@@ -506,20 +506,34 @@ textarea, select, input, button { font-family: inherit; }
 .doc-editorial-header .history-row-header:hover { background: rgba(0,0,0,0.03); }
 
 /* Hover popup — positioned near hovered panel item */
-.efp-hover-popup {
-  position: fixed;
-  width: 240px;
-  background: var(--paper);
-  border: 1px solid var(--border-strong);
-  box-shadow: 0 4px 20px rgba(31,27,22,0.13), 0 1px 4px rgba(31,27,22,0.06);
-  border-radius: 3px;
-  padding: 16px 18px;
-  z-index: 400;
-  pointer-events: none;
+/* Editor preview pane — fixed at bottom of the floating panel */
+.efp-preview-pane {
+  border-top: 1px solid var(--border-strong);
+  background: var(--cream);
+  padding: 14px 14px 16px;
+  min-height: 90px;
 }
-.efp-popup-name { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
-.efp-popup-byline { font-size: 11px; font-style: italic; color: var(--mono-grey-light); margin-bottom: 10px; }
-.efp-popup-lead { font-size: 13px; line-height: 1.6; color: var(--ink-soft); }
+.efp-preview-empty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mono-grey-light);
+  padding-top: 4px;
+}
+.efp-preview-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+.efp-preview-byline { font-size: 10px; font-style: italic; color: var(--mono-grey-light); margin-bottom: 8px; }
+.efp-preview-lead { font-size: 12px; line-height: 1.6; color: var(--ink-soft); margin-bottom: 10px; }
+.efp-preview-readmore {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--mono-grey);
+  text-decoration: none;
+  transition: color 100ms ease;
+}
+.efp-preview-readmore:hover { color: var(--accent); }
 
 /* ---- Pass history ---- */
 .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; gap: 12px; }

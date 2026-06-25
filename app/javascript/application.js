@@ -138,6 +138,25 @@ function initEssayApp() {
     { value: "extended_academic",  label: "Extended academic" },
   ];
 
+  function buildPreviewPane(initialEditor) {
+    const pane = document.createElement("div");
+    pane.className = "efp-preview-pane";
+    fillPreviewPane(pane, initialEditor);
+    return pane;
+  }
+
+  function fillPreviewPane(pane, e) {
+    if (!e) {
+      pane.innerHTML = `<div class="efp-preview-empty">Hover an editor to preview its focus</div>`;
+      return;
+    }
+    pane.innerHTML = `
+      <div class="efp-preview-name">${e.name}</div>
+      <div class="efp-preview-byline">${authorDisplay(e)} · <em>${e.source}</em></div>
+      <div class="efp-preview-lead">${e.lead || e.focus || ""}</div>
+      <a href="/editors/${e.key}" class="efp-preview-readmore">Full profile →</a>`;
+  }
+
   function buildFilterBar() {
     const bar = document.createElement("div");
     bar.className = "efp-filter-bar";
@@ -782,6 +801,7 @@ function initEssayApp() {
     body.appendChild(pickHeading);
     const list = document.createElement("div");
     list.className = "efp-list";
+    const landingPreview = buildPreviewPane(editorByKey(state.editorKey));
     filteredEditors(state.editorFilter).forEach((e) => {
       const item = document.createElement("div");
       const sel  = state.editorKey === e.key;
@@ -794,14 +814,13 @@ function initEssayApp() {
       </div>`;
       if (e.available) {
         item.addEventListener("click", () => { state.editorKey = e.key; render(); });
-        let hoverTimer = null;
-        item.addEventListener("mouseenter", () => { hoverTimer = setTimeout(() => showHoverPopup(e, item), 600); });
-        item.addEventListener("mouseleave", () => { clearTimeout(hoverTimer); hoverTimer = null; hideHoverPopup(); });
+        item.addEventListener("mouseenter", () => fillPreviewPane(landingPreview, e));
       }
       list.appendChild(item);
     });
     body.appendChild(list);
     panel.appendChild(body);
+    panel.appendChild(landingPreview);
 
     // Footer
     const footer = document.createElement("div");
@@ -1051,6 +1070,7 @@ function initEssayApp() {
       body.className = "efp-body";
 
       body.appendChild(buildFilterBar());
+      const editingPreview = buildPreviewPane(editorByKey(state.editorKey));
 
       // Editor list with label
       const editorSection = document.createElement("div");
@@ -1086,9 +1106,7 @@ function initEssayApp() {
               runPass();
             });
             item.appendChild(runBtn);
-            let hoverTimer = null;
-            item.addEventListener("mouseenter", () => { hoverTimer = setTimeout(() => showHoverPopup(e, item), 600); });
-            item.addEventListener("mouseleave", () => { clearTimeout(hoverTimer); hoverTimer = null; hideHoverPopup(); });
+            item.addEventListener("mouseenter", () => fillPreviewPane(editingPreview, e));
           }
           itemList.appendChild(item);
         });
@@ -1110,6 +1128,7 @@ function initEssayApp() {
       }
 
       panel.appendChild(body);
+      panel.appendChild(editingPreview);
     }
   }
 
