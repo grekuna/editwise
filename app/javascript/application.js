@@ -120,6 +120,41 @@ function initEssayApp() {
     return e.author === "editwise" ? e.author : `after ${e.author}`;
   }
 
+  function filteredEditors(filter) {
+    switch (filter) {
+      case "core_editorial":    return editors.filter((e) => e.category === "core_editorial");
+      case "extended_editorial":return editors.filter((e) => e.category === "core_editorial" || e.category === "extended_editorial");
+      case "core_academic":     return editors.filter((e) => e.category === "core_academic");
+      case "extended_academic": return editors.filter((e) => e.category === "core_academic"  || e.category === "extended_academic");
+      default:                  return editors;
+    }
+  }
+
+  const FILTERS = [
+    { value: "all",                label: "All editors" },
+    { value: "core_editorial",     label: "Core editorial" },
+    { value: "extended_editorial", label: "Extended editorial" },
+    { value: "core_academic",      label: "Core academic" },
+    { value: "extended_academic",  label: "Extended academic" },
+  ];
+
+  function buildFilterBar() {
+    const bar = document.createElement("div");
+    bar.className = "efp-filter-bar";
+    const heading = document.createElement("div");
+    heading.className = "efp-filter-heading";
+    heading.textContent = "Filter by focus";
+    bar.appendChild(heading);
+    FILTERS.forEach(({ value, label }) => {
+      const btn = document.createElement("button");
+      btn.className = "efp-filter-btn" + (state.editorFilter === value ? " efp-filter-btn--active" : "");
+      btn.textContent = label;
+      btn.addEventListener("click", () => { state.editorFilter = value; render(); });
+      bar.appendChild(btn);
+    });
+    return bar;
+  }
+
   function applyMarkdownFormat(ta, format) {
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
@@ -737,10 +772,13 @@ function initEssayApp() {
     panel.appendChild(handle);
     setupPanelDrag(panel, handle);
 
-    // Editor list
+    // Filter bar + editor list
+    const body = document.createElement("div");
+    body.className = "efp-body";
+    body.appendChild(buildFilterBar());
     const list = document.createElement("div");
     list.className = "efp-list";
-    editors.forEach((e) => {
+    filteredEditors(state.editorFilter).forEach((e) => {
       const item = document.createElement("div");
       const sel  = state.editorKey === e.key;
       item.className = "efp-item" +
@@ -758,7 +796,8 @@ function initEssayApp() {
       }
       list.appendChild(item);
     });
-    panel.appendChild(list);
+    body.appendChild(list);
+    panel.appendChild(body);
 
     // Footer
     const footer = document.createElement("div");
@@ -1007,28 +1046,7 @@ function initEssayApp() {
       const body = document.createElement("div");
       body.className = "efp-body";
 
-      // Filter bar
-      const FILTERS = [
-        { value: "all",               label: "All editors" },
-        { value: "core_editorial",    label: "Core editorial" },
-        { value: "extended_editorial",label: "Extended editorial" },
-        { value: "core_academic",     label: "Core academic" },
-        { value: "extended_academic", label: "Extended academic" },
-      ];
-      const filterBar = document.createElement("div");
-      filterBar.className = "efp-filter-bar";
-      const filterHeading = document.createElement("div");
-      filterHeading.className = "efp-filter-heading";
-      filterHeading.textContent = "Filter by focus";
-      filterBar.appendChild(filterHeading);
-      FILTERS.forEach(({ value, label }) => {
-        const btn = document.createElement("button");
-        btn.className = "efp-filter-btn" + (state.editorFilter === value ? " efp-filter-btn--active" : "");
-        btn.textContent = label;
-        btn.addEventListener("click", () => { state.editorFilter = value; render(); });
-        filterBar.appendChild(btn);
-      });
-      body.appendChild(filterBar);
+      body.appendChild(buildFilterBar());
 
       // Editor list with label
       const editorSection = document.createElement("div");
@@ -1038,9 +1056,7 @@ function initEssayApp() {
       editorLabel.textContent = "Select an editor and run a pass";
       editorSection.appendChild(editorLabel);
       {
-        const visibleEditors = state.editorFilter === "all"
-          ? editors
-          : editors.filter((e) => e.category === state.editorFilter);
+        const visibleEditors = filteredEditors(state.editorFilter);
         const itemList = document.createElement("div");
         itemList.className = "efp-list";
         visibleEditors.forEach((e) => {

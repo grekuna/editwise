@@ -379,13 +379,13 @@ textarea, select, input, button { font-family: inherit; }
   border-bottom: 1px solid var(--border);
 }
 .efp-filter-heading {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--mono-grey-light);
-  padding: 4px 13px 6px;
+  font-family: 'Newsreader', Georgia, serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink);
+  padding: 12px 13px 8px;
+  border-bottom: 1px solid var(--border);
 }
 .efp-filter-btn {
   display: block;
